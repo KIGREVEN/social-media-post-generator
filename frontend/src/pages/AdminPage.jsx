@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
-import { Users, FileText, Share2, BarChart3, Plus, Edit, Trash2, Crown, User, CheckCircle, XCircle, Calendar, TrendingUp } from 'lucide-react'
+import { Users, FileText, Share2, BarChart3, Plus, Edit, Trash2, Crown, User, CheckCircle, XCircle, Calendar, TrendingUp, Settings, RefreshCw } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const AdminPage = () => {
@@ -23,12 +23,28 @@ const AdminPage = () => {
   const [selectedUser, setSelectedUser] = useState(null)
   const [isCreateUserOpen, setIsCreateUserOpen] = useState(false)
   const [isEditUserOpen, setIsEditUserOpen] = useState(false)
+  const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false)
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
     password: '',
-    role: 'user'
+    role: 'user',
+    subscription: 'free',
+    monthly_limit: 10
   })
+  const [subscriptionUpdate, setSubscriptionUpdate] = useState({
+    subscription: 'free',
+    monthly_limit: 10,
+    reset_usage: false
+  })
+
+  // Subscription limits mapping
+  const subscriptionLimits = {
+    free: 10,
+    basic: 50,
+    premium: 200,
+    enterprise: 1000
+  }
 
   // Fetch system statistics
   const fetchStats = async () => {
@@ -55,9 +71,9 @@ const AdminPage = () => {
         const data = await response.json()
         setUsers(data.users || [])
       } else {
-        throw new Error('Failed to fetch users')
+        setError('Fehler beim Laden der Benutzer')
       }
-    } catch (err) {
+    } catch (error) {
       setError('Fehler beim Laden der Benutzer')
     }
   }
@@ -91,7 +107,7 @@ const AdminPage = () => {
       
       if (response.ok) {
         setIsCreateUserOpen(false)
-        setNewUser({ username: '', email: '', password: '', role: 'user' })
+        setNewUser({ username: '', email: '', password: '', role: 'user', subscription: 'free', monthly_limit: 10 })
         fetchUsers()
         fetchStats()
       } else {
@@ -116,7 +132,6 @@ const AdminPage = () => {
       
       if (response.ok) {
         setIsEditUserOpen(false)
-        setSelectedUser(null)
         fetchUsers()
         fetchStats()
       } else {
@@ -128,14 +143,36 @@ const AdminPage = () => {
     }
   }
 
+  // Update user subscription
+  const updateUserSubscription = async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-users/${userId}/subscription`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(subscriptionUpdate)
+      })
+      
+      if (response.ok) {
+        setIsSubscriptionDialogOpen(false)
+        setSubscriptionUpdate({ subscription: 'free', monthly_limit: 10, reset_usage: false })
+        fetchUsers()
+        fetchStats()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Fehler beim Aktualisieren der Subscription')
+      }
+    } catch (error) {
+      setError('Fehler beim Aktualisieren der Subscription')
+    }
+  }
+
   // Delete user
   const deleteUser = async (userId) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        method: 'DELETE'
       })
       
       if (response.ok) {
@@ -158,45 +195,49 @@ const AdminPage = () => {
     }
     
     loadData()
-  }, [token])
+  }, [])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Lade Admin Dashboard...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="text-red-800">{error}</div>
-        <Button 
-          onClick={() => window.location.reload()} 
-          className="mt-2"
-          variant="outline"
-        >
-          Neu laden
-        </Button>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Lade Admin Dashboard...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Admin Dashboard
-        </h1>
-        <p className="text-gray-600 mt-2">
-          Verwalten Sie Benutzer und System-Einstellungen
-        </p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-2">Verwalten Sie Benutzer und System-Einstellungen</p>
+        </div>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Neu laden
+        </Button>
       </div>
 
-      {/* System Statistics */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+          <p>{error}</p>
+          <Button 
+            onClick={() => setError(null)} 
+            variant="ghost" 
+            size="sm" 
+            className="mt-2"
+          >
+            Schließen
+          </Button>
+        </div>
+      )}
+
+      {/* Statistics Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Benutzer gesamt</CardTitle>
@@ -207,6 +248,16 @@ const AdminPage = () => {
               <p className="text-xs text-muted-foreground">
                 {stats.users?.active || 0} aktiv, {stats.users?.admins || 0} Admins
               </p>
+              {stats.users?.by_subscription && (
+                <div className="mt-2 space-y-1">
+                  {Object.entries(stats.users.by_subscription).map(([sub, count]) => (
+                    <div key={sub} className="flex justify-between text-xs">
+                      <span className="capitalize">{sub}:</span>
+                      <span>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -274,7 +325,7 @@ const AdminPage = () => {
                   Benutzer erstellen
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Neuen Benutzer erstellen</DialogTitle>
                   <DialogDescription>
@@ -331,6 +382,38 @@ const AdminPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="subscription" className="text-right">
+                      Subscription
+                    </Label>
+                    <Select value={newUser.subscription} onValueChange={(value) => {
+                      setNewUser({...newUser, subscription: value, monthly_limit: subscriptionLimits[value]})
+                    }}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free (10 Posts/Monat)</SelectItem>
+                        <SelectItem value="basic">Basic (50 Posts/Monat)</SelectItem>
+                        <SelectItem value="premium">Premium (200 Posts/Monat)</SelectItem>
+                        <SelectItem value="enterprise">Enterprise (1000 Posts/Monat)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="monthly_limit" className="text-right">
+                      Monatliches Limit
+                    </Label>
+                    <Input
+                      id="monthly_limit"
+                      type="number"
+                      value={newUser.monthly_limit}
+                      onChange={(e) => setNewUser({...newUser, monthly_limit: parseInt(e.target.value) || 10})}
+                      className="col-span-3"
+                      min="1"
+                      max="10000"
+                    />
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button onClick={createUser}>Benutzer erstellen</Button>
@@ -347,6 +430,8 @@ const AdminPage = () => {
                     <TableHead>Benutzer</TableHead>
                     <TableHead>E-Mail</TableHead>
                     <TableHead>Rolle</TableHead>
+                    <TableHead>Subscription</TableHead>
+                    <TableHead>Posts Nutzung</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Erstellt</TableHead>
                     <TableHead>Aktionen</TableHead>
@@ -372,6 +457,26 @@ const AdminPage = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
+                        <Badge variant={
+                          user.subscription === 'enterprise' ? 'default' :
+                          user.subscription === 'premium' ? 'secondary' :
+                          user.subscription === 'basic' ? 'outline' : 'destructive'
+                        }>
+                          {user.subscription?.charAt(0).toUpperCase() + user.subscription?.slice(1) || 'Free'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <TrendingUp className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm">
+                            {user.post_usage ? 
+                              `${user.post_usage.posts_generated}/${user.post_usage.monthly_limit}` : 
+                              '0/10'
+                            }
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center space-x-1">
                           {user.is_active ? (
                             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -393,6 +498,21 @@ const AdminPage = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user)
+                              setSubscriptionUpdate({
+                                subscription: user.subscription || 'free',
+                                monthly_limit: user.post_usage?.monthly_limit || 10,
+                                reset_usage: false
+                              })
+                              setIsSubscriptionDialogOpen(true)
+                            }}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="outline"
                             size="sm"
@@ -439,48 +559,11 @@ const AdminPage = () => {
         <TabsContent value="posts" className="space-y-4">
           <h2 className="text-xl font-semibold">Post-Übersicht</h2>
           <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Titel</TableHead>
-                    <TableHead>Benutzer</TableHead>
-                    <TableHead>Plattform</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Erstellt</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {posts.map((post) => (
-                    <TableRow key={post.id}>
-                      <TableCell className="font-medium">
-                        {post.title || 'Ohne Titel'}
-                      </TableCell>
-                      <TableCell>
-                        {post.user?.username || 'Unbekannt'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {post.platform}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={post.is_posted ? 'default' : 'secondary'}>
-                          {post.is_posted ? 'Veröffentlicht' : 'Entwurf'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          <span className="text-sm">
-                            {new Date(post.created_at).toLocaleDateString('de-DE')}
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardContent className="p-6">
+              <p className="text-gray-600">Hier werden alle Posts aller Benutzer angezeigt.</p>
+              <p className="text-sm text-gray-500 mt-2">
+                Anzahl Posts: {posts.length}
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -488,62 +571,112 @@ const AdminPage = () => {
         {/* System Settings Tab */}
         <TabsContent value="system" className="space-y-4">
           <h2 className="text-xl font-semibold">System-Einstellungen</h2>
-          <div className="grid gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>API-Konfiguration</CardTitle>
-                <CardDescription>
-                  Verwalten Sie die API-Einstellungen für externe Dienste
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label>OpenAI API Status</Label>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Konfiguriert</span>
-                    </div>
-                  </div>
-                  <div>
-                    <Label>Social Media APIs</Label>
-                    <div className="mt-2 space-y-2">
-                      {['LinkedIn', 'Facebook', 'Twitter', 'Instagram'].map((platform) => (
-                        <div key={platform} className="flex items-center justify-between">
-                          <span className="text-sm">{platform}</span>
-                          <Badge variant="outline">Optional</Badge>
-                        </div>
-                      ))}
-                    </div>
+          <Card>
+            <CardContent className="p-6">
+              <p className="text-gray-600">Hier können Sie System-weite Einstellungen verwalten.</p>
+              <div className="mt-4 space-y-4">
+                <div>
+                  <h3 className="font-medium">Subscription-Limits</h3>
+                  <div className="mt-2 space-y-2">
+                    {Object.entries(subscriptionLimits).map(([sub, limit]) => (
+                      <div key={sub} className="flex justify-between text-sm">
+                        <span className="capitalize">{sub}:</span>
+                        <span>{limit} Posts/Monat</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>System-Limits</CardTitle>
-                <CardDescription>
-                  Konfigurieren Sie die Standard-Limits für neue Benutzer
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label>Monatliches Post-Limit (kostenlose Benutzer)</Label>
-                    <Input type="number" defaultValue="10" className="mt-1" />
-                  </div>
-                  <div>
-                    <Label>Maximale Dateigröße (MB)</Label>
-                    <Input type="number" defaultValue="5" className="mt-1" />
-                  </div>
-                  <Button>Einstellungen speichern</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Subscription Management Dialog */}
+      <Dialog open={isSubscriptionDialogOpen} onOpenChange={setIsSubscriptionDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Subscription verwalten</DialogTitle>
+            <DialogDescription>
+              Verwalten Sie die Subscription und monatlichen Limits für {selectedUser?.username}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="sub-subscription" className="text-right">
+                Subscription
+              </Label>
+              <Select 
+                value={subscriptionUpdate.subscription} 
+                onValueChange={(value) => setSubscriptionUpdate({
+                  ...subscriptionUpdate, 
+                  subscription: value, 
+                  monthly_limit: subscriptionLimits[value]
+                })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="free">Free (10 Posts/Monat)</SelectItem>
+                  <SelectItem value="basic">Basic (50 Posts/Monat)</SelectItem>
+                  <SelectItem value="premium">Premium (200 Posts/Monat)</SelectItem>
+                  <SelectItem value="enterprise">Enterprise (1000 Posts/Monat)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="sub-monthly-limit" className="text-right">
+                Monatliches Limit
+              </Label>
+              <Input
+                id="sub-monthly-limit"
+                type="number"
+                value={subscriptionUpdate.monthly_limit}
+                onChange={(e) => setSubscriptionUpdate({
+                  ...subscriptionUpdate, 
+                  monthly_limit: parseInt(e.target.value) || 10
+                })}
+                className="col-span-3"
+                min="1"
+                max="10000"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="reset-usage" className="text-right">
+                Nutzung zurücksetzen
+              </Label>
+              <div className="col-span-3 flex items-center space-x-2">
+                <input
+                  id="reset-usage"
+                  type="checkbox"
+                  checked={subscriptionUpdate.reset_usage}
+                  onChange={(e) => setSubscriptionUpdate({
+                    ...subscriptionUpdate, 
+                    reset_usage: e.target.checked
+                  })}
+                />
+                <Label htmlFor="reset-usage" className="text-sm">
+                  Monatliche Nutzung auf 0 zurücksetzen
+                </Label>
+              </div>
+            </div>
+            {selectedUser?.post_usage && (
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Aktuelle Nutzung</Label>
+                <div className="col-span-3 text-sm text-gray-600">
+                  {selectedUser.post_usage.posts_generated}/{selectedUser.post_usage.monthly_limit} Posts generiert
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => updateUserSubscription(selectedUser?.id)}>
+              Subscription aktualisieren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit User Dialog */}
       {selectedUser && (
