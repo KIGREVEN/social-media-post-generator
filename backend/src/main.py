@@ -61,12 +61,14 @@ def create_app(config_name=None):
     from src.routes.social import social_bp
     from src.routes.admin import admin_bp
     from src.routes.super_admin import super_admin_bp
+    from src.routes.debug_admin import debug_admin_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
     app.register_blueprint(social_bp, url_prefix='/api/social')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(super_admin_bp, url_prefix='/api/super-admin')
+    app.register_blueprint(debug_admin_bp, url_prefix='/api/debug-admin')
     
     # Create database tables
     with app.app_context():
