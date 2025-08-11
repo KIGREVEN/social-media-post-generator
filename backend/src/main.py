@@ -12,16 +12,51 @@ from src.config import config
 from src.models import db, User, Post, SocialAccount, PostUsage
 
 def run_database_migration():
-    """Run database migration on startup."""
+    """Run database migration on startup using SQLAlchemy."""
     try:
-        from src.database_migration import main as migrate_main
         print("🔄 Running database migration on startup...")
-        result = migrate_main()
-        if result == 0:
-            print("✅ Database migration completed successfully")
+        
+        # Import here to avoid circular imports
+        from sqlalchemy import inspect, text
+        
+        # Check if subscription column exists
+        inspector = inspect(db.engine)
+        
+        if 'users' in inspector.get_table_names():
+            columns = [col['name'] for col in inspector.get_columns('users')]
+            if 'subscription' not in columns:
+                print("🔄 Adding subscription column to users table...")
+                try:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("""
+                            ALTER TABLE users 
+                            ADD COLUMN subscription VARCHAR(20) DEFAULT 'free' NOT NULL
+                        """))
+                        conn.commit()
+                    print("✅ Added subscription column successfully")
+                    
+                    # Update existing users
+                    with db.engine.connect() as conn:
+                        result = conn.execute(text("""
+                            UPDATE users 
+                            SET subscription = 'free' 
+                            WHERE subscription IS NULL OR subscription = ''
+                        """))
+                        conn.commit()
+                        print(f"✅ Updated {result.rowcount} users with default subscription")
+                        
+                except Exception as e:
+                    print(f"⚠️  Could not add subscription column: {e}")
+                    print("   This is normal if the column already exists")
+                    return False
+            else:
+                print("✅ Subscription column already exists")
         else:
-            print("❌ Database migration failed")
-        return result == 0
+            print("⚠️  Users table will be created on first user registration")
+        
+        print("✅ Database migration completed successfully")
+        return True
+        
     except Exception as e:
         print(f"❌ Error running database migration: {e}")
         return False

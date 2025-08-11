@@ -12,6 +12,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default='user', nullable=False)  # 'admin' or 'user'
+    subscription = db.Column(db.String(20), default='free', nullable=False)  # 'free', 'basic', 'premium', 'enterprise'
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -41,8 +42,16 @@ class User(db.Model):
         return self.role == 'admin'
 
     def get_subscription(self):
-        """Get subscription - returns 'free' as default."""
-        return 'free'
+        """Get subscription - returns actual subscription or 'free' as default."""
+        return getattr(self, 'subscription', 'free')
+
+    def set_subscription(self, subscription_type):
+        """Set subscription type."""
+        valid_subscriptions = ['free', 'basic', 'premium', 'enterprise']
+        if subscription_type in valid_subscriptions:
+            self.subscription = subscription_type
+            return True
+        return False
 
     def get_subscription_limits(self):
         """Get the post limits based on subscription type."""
