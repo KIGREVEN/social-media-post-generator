@@ -501,3 +501,89 @@ def run_migration_safe():
             'results': results if 'results' in locals() else []
         }), 500
 
+
+
+@debug_admin_safe_bp.route('/health', methods=['GET'])
+def health_check():
+    """Safe health check endpoint with OpenAI configuration status."""
+    try:
+        from flask import current_app
+        from src.models import User
+        
+        user_count = User.query.count()
+        
+        # Check OpenAI API key configuration
+        openai_configured = bool(current_app.config.get('OPENAI_API_KEY'))
+        openai_key_preview = None
+        if openai_configured:
+            key = current_app.config.get('OPENAI_API_KEY')
+            if key and len(key) > 10:
+                openai_key_preview = f"{key[:10]}...{key[-4:]}"
+        
+        return jsonify({
+            'message': 'Backend is healthy',
+            'status': 'healthy',
+            'timestamp': datetime.utcnow().isoformat(),
+            'user_count': user_count,
+            'openai_configured': openai_configured,
+            'openai_key_preview': openai_key_preview
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'message': 'Backend health check failed',
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat()
+        }), 500
+
+@debug_admin_safe_bp.route('/openai-test', methods=['GET'])
+def test_openai_config():
+    """Test OpenAI configuration and API connectivity."""
+    try:
+        from flask import current_app
+        import openai
+        
+        # Check if API key is configured
+        api_key = current_app.config.get('OPENAI_API_KEY')
+        if not api_key:
+            return jsonify({
+                'configured': False,
+                'error': 'OpenAI API key not configured',
+                'message': 'Please set OPENAI_API_KEY environment variable'
+            }), 400
+        
+        # Test API connectivity with a simple request
+        try:
+            openai.api_key = api_key
+            
+            # Make a simple API call to test connectivity
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=5
+            )
+            
+            return jsonify({
+                'configured': True,
+                'api_accessible': True,
+                'key_preview': f"{api_key[:10]}...{api_key[-4:]}",
+                'test_response': response.choices[0].message.content.strip(),
+                'message': 'OpenAI API is working correctly'
+            }), 200
+            
+        except Exception as api_error:
+            return jsonify({
+                'configured': True,
+                'api_accessible': False,
+                'key_preview': f"{api_key[:10]}...{api_key[-4:]}",
+                'error': str(api_error),
+                'message': 'OpenAI API key configured but API call failed'
+            }), 400
+            
+    except Exception as e:
+        return jsonify({
+            'configured': False,
+            'error': str(e),
+            'message': 'Error testing OpenAI configuration'
+        }), 500
+
