@@ -72,6 +72,9 @@ def create_app(config_name=None):
     # Initialize extensions
     db.init_app(app)
     migrate = Migrate(app, db)
+    
+    # Stelle sicher, dass JWT das gleiche Secret wie die App verwendet
+    app.config['JWT_SECRET_KEY'] = app.config['SECRET_KEY']
     jwt = JWTManager(app)
     
     # JWT error handlers

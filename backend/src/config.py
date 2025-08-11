@@ -6,8 +6,11 @@ load_dotenv()
 
 class Config:
     """Base configuration class."""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'social-media-post-generator-secret-key-2025'
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'social-media-post-generator-jwt-secret-key-2025'
+    # Synchronisiere JWT und SECRET Keys für konsistente Token-Verarbeitung
+    _secret_key = os.environ.get('SECRET_KEY') or os.environ.get('JWT_SECRET_KEY') or 'social-media-post-generator-secret-key-2025'
+    SECRET_KEY = _secret_key
+    JWT_SECRET_KEY = _secret_key  # Stelle sicher, dass beide identisch sind
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # OpenAI Configuration
