@@ -58,42 +58,68 @@ class OpenAIService:
     
     def generate_image(self, prompt: str, size: str = "1024x1024") -> str:
         """
-        Generate an image using GPT-Image-1 via Responses API.
+        Generate an image using GPT-Image-1 with working implementation.
         
         Args:
             prompt: Description for image generation
-            size: Image size (not used in Responses API, but kept for compatibility)
+            size: Image size (1024x1024, 1024x1536, 1536x1024)
             
         Returns:
-            Base64 encoded image data or URL
+            Base64 encoded image data URL
         """
         try:
-            # Use Responses API with image_generation tool (GPT-Image-1)
-            response = self.client.responses.create(
-                model="gpt-4.1-mini",
-                input=f"Generate a professional business image: {prompt}. Style: Clean, professional, high-quality business aesthetic suitable for social media.",
-                tools=[{"type": "image_generation"}],
+            # Build professional prompt for GPT-Image-1
+            professional_prompt = f"professional photography, ultra-realistic, 4K UHD resolution, shallow depth of field, soft natural lighting, high dynamic range, sharp focus, bokeh background, cinematic composition, wide aspect ratio, color graded like editorial magazine, taken with DSLR or mirrorless camera (Canon EOS R5 / Sony A7R IV), {prompt}"
+            
+            print(f"=== GPT-IMAGE-1 GENERATION DEBUG ===")
+            print(f"Original prompt: {prompt}")
+            print(f"Professional prompt: {professional_prompt}")
+            print(f"Size: {size}")
+            print(f"=== END DEBUG ===")
+            
+            # Generate image using GPT-Image-1 with working configuration
+            response = self.client.images.generate(
+                model="gpt-image-1",
+                prompt=professional_prompt,
+                size=size,
+                quality="high",  # GPT-Image-1 supports quality parameter
+                n=1,
+                response_format="b64_json"  # This is the key for working implementation!
             )
             
-            # Extract image data from response
-            image_data = [
-                output.result
-                for output in response.output
-                if output.type == "image_generation_call"
-            ]
+            print(f"OpenAI API Response: {response}")
+            print(f"Response type: {type(response)}")
+            print(f"Response data: {response.data if hasattr(response, 'data') else 'No data attribute'}")
             
-            if image_data:
-                # Return base64 encoded image data
-                return f"data:image/png;base64,{image_data[0]}"
+            # Process the base64 image response (working implementation)
+            if response and hasattr(response, 'data') and response.data and len(response.data) > 0:
+                first_item = response.data[0]
+                print(f"First data item: {first_item}")
+                print(f"First item type: {type(first_item)}")
+                
+                # Handle base64 response from GPT-Image-1 (working method)
+                if hasattr(first_item, 'b64_json') and first_item.b64_json:
+                    print("Processing base64 image from GPT-Image-1")
+                    # Return base64 data URL for direct use
+                    return f"data:image/png;base64,{first_item.b64_json}"
+                elif hasattr(first_item, 'url') and first_item.url:
+                    # Fallback for URL response
+                    print(f"Found URL (fallback): {first_item.url}")
+                    return first_item.url
+                else:
+                    print(f"No usable image data found. Available attributes: {[attr for attr in dir(first_item) if not attr.startswith('_')]}")
+                    raise Exception("No usable image data returned from GPT-Image-1")
             else:
-                raise Exception("No image data found in response")
+                print("ERROR: Invalid response structure from OpenAI API")
+                raise Exception("Invalid API response from GPT-Image-1")
             
         except Exception as e:
             # Log the error for debugging
-            print(f"GPT-Image-1 Responses API error: {str(e)}")
+            print(f"GPT-Image-1 error: {str(e)}")
             
-            # Fallback to traditional Images API with DALL-E 3
+            # Fallback to DALL-E 3 if GPT-Image-1 fails
             try:
+                print("Falling back to DALL-E 3...")
                 response = self.client.images.generate(
                     model="dall-e-3",
                     prompt=prompt,
