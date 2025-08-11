@@ -76,3 +76,4 @@ class User(db.Model):
             data['password_hash'] = self.password_hash
             
         return data
+
