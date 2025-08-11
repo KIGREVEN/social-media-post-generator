@@ -86,8 +86,8 @@ def create_app(config_name=None):
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(super_admin_bp, url_prefix='/api/super-admin')
     app.register_blueprint(debug_admin_bp, url_prefix='/api/debug-admin')
-    app.register_blueprint(debug_admin_safe_bp)
-    app.register_blueprint(migration_bp)
+    app.register_blueprint(debug_admin_safe_bp, url_prefix='/api/debug-admin-safe')
+    app.register_blueprint(migration_bp, url_prefix='/api/migration')
     
     # Create database tables
     with app.app_context():
