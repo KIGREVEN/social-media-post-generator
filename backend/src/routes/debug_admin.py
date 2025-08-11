@@ -103,3 +103,147 @@ def get_debug_posts():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@debug_admin_bp.route('/debug-users', methods=['POST'])
+def create_debug_user():
+    """Create a new user without JWT (debug only)."""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['username', 'email', 'password']
+        for field in required_fields:
+            if field not in data or not data[field]:
+                return jsonify({'error': f'{field} is required'}), 400
+        
+        # Check if username already exists
+        if User.query.filter_by(username=data['username']).first():
+            return jsonify({'error': 'Username already exists'}), 409
+        
+        # Check if email already exists
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email already exists'}), 409
+        
+        # Validate password length
+        if len(data['password']) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters long'}), 400
+        
+        # Validate role
+        role = data.get('role', 'user')
+        if role not in ['user', 'admin']:
+            return jsonify({'error': 'Invalid role. Must be "user" or "admin"'}), 400
+        
+        # Create new user
+        user = User(
+            username=data['username'],
+            email=data['email'],
+            role=role,
+            is_active=data.get('is_active', True)
+        )
+        user.set_password(data['password'])
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        # Create post usage record
+        post_usage = PostUsage(
+            user_id=user.id,
+            monthly_limit=data.get('monthly_limit', 10)
+        )
+        db.session.add(post_usage)
+        db.session.commit()
+        
+        return jsonify({
+            'user': user.to_dict(),
+            'message': 'User created successfully'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['PUT'])
+def update_debug_user(user_id):
+    """Update a user without JWT (debug only)."""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json()
+        
+        # Update allowed fields
+        if 'username' in data:
+            # Check if username is already taken by another user
+            existing_user = User.query.filter(
+                User.username == data['username'],
+                User.id != user_id
+            ).first()
+            if existing_user:
+                return jsonify({'error': 'Username already exists'}), 409
+            user.username = data['username']
+        
+        if 'email' in data:
+            # Check if email is already taken by another user
+            existing_user = User.query.filter(
+                User.email == data['email'],
+                User.id != user_id
+            ).first()
+            if existing_user:
+                return jsonify({'error': 'Email already exists'}), 409
+            user.email = data['email']
+        
+        if 'role' in data:
+            if data['role'] not in ['user', 'admin']:
+                return jsonify({'error': 'Invalid role. Must be "user" or "admin"'}), 400
+            user.role = data['role']
+        
+        if 'is_active' in data:
+            user.is_active = bool(data['is_active'])
+        
+        if 'password' in data:
+            if len(data['password']) < 6:
+                return jsonify({'error': 'Password must be at least 6 characters long'}), 400
+            user.set_password(data['password'])
+        
+        # Update monthly limit if provided
+        if 'monthly_limit' in data:
+            post_usage = PostUsage.query.filter_by(user_id=user_id).first()
+            if post_usage:
+                post_usage.set_monthly_limit(data['monthly_limit'])
+        
+        db.session.commit()
+        
+        return jsonify({
+            'user': user.to_dict(),
+            'message': 'User updated successfully'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['DELETE'])
+def delete_debug_user(user_id):
+    """Delete a user without JWT (debug only)."""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Prevent deletion of the last admin
+        if user.role == 'admin':
+            admin_count = User.query.filter_by(role='admin').count()
+            if admin_count <= 1:
+                return jsonify({'error': 'Cannot delete the last admin user'}), 400
+        
+        # Delete user (cascade will handle related records)
+        db.session.delete(user)
+        db.session.commit()
+        
+        return jsonify({'message': 'User deleted successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
