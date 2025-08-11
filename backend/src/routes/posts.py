@@ -358,7 +358,8 @@ def generate_post_test():
         
         # Direkte OpenAI-Integration ohne User-Checks
         try:
-            api_key = current_app.config.get('OPENAI_API_KEY')
+            import os
+            api_key = os.environ.get('OPENAI_API_KEY')
             if not api_key:
                 return jsonify({
                     'error': 'OpenAI API key not configured',
