@@ -19,7 +19,6 @@ import {
 const DashboardPage = () => {
   const { user, token, API_BASE_URL } = useAuth()
   const [stats, setStats] = useState({
-    usage: null,
     recentPosts: [],
     connectedAccounts: []
   })
@@ -31,14 +30,6 @@ const DashboardPage = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch current user profile with updated subscription info
-      const profileResponse = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
       // Fetch recent posts
       const postsResponse = await fetch(`${API_BASE_URL}/api/posts?per_page=5`, {
         headers: {
@@ -55,17 +46,12 @@ const DashboardPage = () => {
         }
       })
 
-      const [profileData, postsData, accountsData] = await Promise.all([
-        profileResponse.ok ? profileResponse.json() : { user: null },
+      const [postsData, accountsData] = await Promise.all([
         postsResponse.ok ? postsResponse.json() : { posts: [] },
         accountsResponse.ok ? accountsResponse.json() : { accounts: [] }
       ])
 
-      // Use post_usage from profile data for accurate limits
-      const usage = profileData.user?.post_usage || null
-
       setStats({
-        usage: usage,
         recentPosts: postsData.posts || [],
         connectedAccounts: accountsData.accounts || []
       })
@@ -77,13 +63,13 @@ const DashboardPage = () => {
   }
 
   const getUsagePercentage = () => {
-    if (!stats.usage) return 0
-    return (stats.usage.posts_generated / stats.usage.monthly_limit) * 100
+    if (!user?.post_usage) return 0
+    return (user.post_usage.posts_generated / user.post_usage.monthly_limit) * 100
   }
 
   const getRemainingPosts = () => {
-    if (!stats.usage) return 0
-    return stats.usage.monthly_limit - stats.usage.posts_generated
+    if (!user?.post_usage) return 0
+    return user.post_usage.monthly_limit - user.post_usage.posts_generated
   }
 
   const quickActions = [
@@ -139,7 +125,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.usage?.posts_generated || 0}
+              {user?.post_usage?.posts_generated || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               Diesen Monat
@@ -157,7 +143,7 @@ const DashboardPage = () => {
               {getRemainingPosts()}
             </div>
             <p className="text-xs text-muted-foreground">
-              Von {stats.usage?.monthly_limit || 10} verfügbar
+              Von {user?.post_usage?.monthly_limit || 10} verfügbar
             </p>
           </CardContent>
         </Card>
@@ -184,7 +170,7 @@ const DashboardPage = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.usage?.posts_posted || 0}
+              {user?.post_usage?.posts_posted || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               Diesen Monat
@@ -208,7 +194,7 @@ const DashboardPage = () => {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Posts generiert</span>
-              <span>{stats.usage?.posts_generated || 0} / {stats.usage?.monthly_limit || 10}</span>
+              <span>{user?.post_usage?.posts_generated || 0} / {user?.post_usage?.monthly_limit || 10}</span>
             </div>
             <Progress value={getUsagePercentage()} className="w-full" />
           </div>
