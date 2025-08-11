@@ -541,7 +541,7 @@ def test_openai_config():
     """Test OpenAI configuration and API connectivity."""
     try:
         from flask import current_app
-        import openai
+        from openai import OpenAI
         
         # Check if API key is configured
         api_key = current_app.config.get('OPENAI_API_KEY')
@@ -554,10 +554,10 @@ def test_openai_config():
         
         # Test API connectivity with a simple request
         try:
-            openai.api_key = api_key
+            client = OpenAI(api_key=api_key)
             
             # Make a simple API call to test connectivity
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5

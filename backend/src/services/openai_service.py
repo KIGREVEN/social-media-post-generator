@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 import requests
 from flask import current_app
 from typing import Optional, Dict, Any
@@ -12,8 +12,8 @@ class OpenAIService:
         if not self.api_key:
             raise ValueError("OpenAI API key not configured")
         
-        # Set the API key for the openai client
-        openai.api_key = self.api_key
+        # Initialize OpenAI client with new v1.0+ API
+        self.client = OpenAI(api_key=self.api_key)
     
     def generate_social_media_post(self, profile_url: str, post_theme: str, 
                                  additional_details: str = "", platform: str = "linkedin") -> str:
@@ -40,7 +40,7 @@ class OpenAIService:
             )
             
             # Generate the post using ChatGPT
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "Du bist ein Top-performing LinkedIn Content Creator mit 15 Jahren Erfahrung in B2B-Content."},
@@ -67,7 +67,7 @@ class OpenAIService:
             URL of the generated image
         """
         try:
-            response = openai.Image.create(
+            response = self.client.images.generate(
                 prompt=prompt,
                 n=1,
                 size=size
