@@ -62,28 +62,65 @@ const PostGeneratorPage = () => {
     setError('')
 
     try {
+      // Debug: Token-Validierung
+      console.log('🔍 Debug Info:');
+      console.log('Token exists:', !!token);
+      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'null');
+      console.log('API_BASE_URL:', API_BASE_URL);
+      
+      // Validiere Token vor Request
+      if (!token) {
+        throw new Error('Kein Authentifizierungs-Token verfügbar. Bitte melden Sie sich erneut an.');
+      }
+
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+      
+      console.log('Request headers:', headers);
+      console.log('Request body:', JSON.stringify(formData, null, 2));
+
       const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: headers,
         body: JSON.stringify(formData)
-      })
+      });
 
-      const data = await response.json()
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
-        setGeneratedPost(data.post)
-        toast.success('Post erfolgreich generiert!')
+        setGeneratedPost(data.post);
+        toast.success('Post erfolgreich generiert!');
       } else {
-        setError(data.error || 'Fehler beim Generieren des Posts')
-        toast.error(data.error || 'Fehler beim Generieren des Posts')
+        // Detaillierte Fehlerbehandlung
+        let errorMessage = data.error || 'Fehler beim Generieren des Posts';
+        
+        if (response.status === 401) {
+          errorMessage = 'Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.';
+        } else if (response.status === 422) {
+          errorMessage = 'Token-Validierung fehlgeschlagen: ' + (data.error || 'Unbekannter Fehler');
+        } else if (response.status === 429) {
+          errorMessage = 'Monatliches Limit erreicht. Bitte upgraden Sie Ihr Abonnement.';
+        }
+        
+        setError(errorMessage);
+        toast.error(errorMessage);
       }
     } catch (error) {
-      console.error('Generate post error:', error)
-      setError('Verbindungsfehler')
-      toast.error('Verbindungsfehler')
+      console.error('Generate post error:', error);
+      let errorMessage = 'Verbindungsfehler';
+      
+      if (error.message.includes('Token')) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false)
     }
