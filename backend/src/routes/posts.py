@@ -112,6 +112,7 @@ def generate_post():
         return jsonify({'error': str(e)}), 500
 
 @posts_bp.route('/', methods=['GET'])
+@posts_bp.route('', methods=['GET'])
 @jwt_required()
 def get_posts():
     """Get user's posts."""
