@@ -12,6 +12,12 @@ def get_debug_stats():
         active_users = User.query.filter_by(is_active=True).count()
         admin_users = User.query.filter_by(role='admin').count()
         
+        # Get subscription statistics
+        subscription_stats = {}
+        subscriptions = ['free', 'basic', 'premium', 'enterprise']
+        for subscription in subscriptions:
+            subscription_stats[subscription] = User.query.filter_by(subscription=subscription).count()
+        
         # Get post statistics
         total_posts = Post.query.count()
         posted_posts = Post.query.filter_by(is_posted=True).count()
@@ -30,7 +36,8 @@ def get_debug_stats():
             'users': {
                 'total': total_users,
                 'active': active_users,
-                'admins': admin_users
+                'admins': admin_users,
+                'by_subscription': subscription_stats
             },
             'posts': {
                 'total': total_posts,
@@ -133,11 +140,17 @@ def create_debug_user():
         if role not in ['user', 'admin']:
             return jsonify({'error': 'Invalid role. Must be "user" or "admin"'}), 400
         
+        # Validate subscription
+        subscription = data.get('subscription', 'free')
+        if subscription not in ['free', 'basic', 'premium', 'enterprise']:
+            return jsonify({'error': 'Invalid subscription. Must be "free", "basic", "premium", or "enterprise"'}), 400
+        
         # Create new user
         user = User(
             username=data['username'],
             email=data['email'],
             role=role,
+            subscription=subscription,
             is_active=data.get('is_active', True)
         )
         user.set_password(data['password'])
@@ -145,10 +158,11 @@ def create_debug_user():
         db.session.add(user)
         db.session.commit()
         
-        # Create post usage record
+        # Create post usage record with subscription-based limit
+        monthly_limit = data.get('monthly_limit', user.get_subscription_limits())
         post_usage = PostUsage(
             user_id=user.id,
-            monthly_limit=data.get('monthly_limit', 10)
+            monthly_limit=monthly_limit
         )
         db.session.add(post_usage)
         db.session.commit()
@@ -198,6 +212,17 @@ def update_debug_user(user_id):
                 return jsonify({'error': 'Invalid role. Must be "user" or "admin"'}), 400
             user.role = data['role']
         
+        if 'subscription' in data:
+            if data['subscription'] not in ['free', 'basic', 'premium', 'enterprise']:
+                return jsonify({'error': 'Invalid subscription. Must be "free", "basic", "premium", or "enterprise"'}), 400
+            user.subscription = data['subscription']
+            
+            # Update monthly limit based on new subscription if not explicitly provided
+            if 'monthly_limit' not in data:
+                post_usage = PostUsage.query.filter_by(user_id=user_id).first()
+                if post_usage:
+                    post_usage.set_monthly_limit(user.get_subscription_limits())
+        
         if 'is_active' in data:
             user.is_active = bool(data['is_active'])
         
@@ -211,6 +236,13 @@ def update_debug_user(user_id):
             post_usage = PostUsage.query.filter_by(user_id=user_id).first()
             if post_usage:
                 post_usage.set_monthly_limit(data['monthly_limit'])
+            else:
+                # Create post usage record if it doesn't exist
+                post_usage = PostUsage(
+                    user_id=user_id,
+                    monthly_limit=data['monthly_limit']
+                )
+                db.session.add(post_usage)
         
         db.session.commit()
         
@@ -245,5 +277,84 @@ def delete_debug_user(user_id):
         
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@debug_admin_bp.route('/debug-users/<int:user_id>/subscription', methods=['PUT'])
+def update_user_subscription(user_id):
+    """Update user subscription and monthly limit."""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json()
+        
+        # Validate subscription
+        if 'subscription' in data:
+            if data['subscription'] not in ['free', 'basic', 'premium', 'enterprise']:
+                return jsonify({'error': 'Invalid subscription. Must be "free", "basic", "premium", or "enterprise"'}), 400
+            user.subscription = data['subscription']
+        
+        # Get or create post usage record
+        post_usage = PostUsage.query.filter_by(user_id=user_id).first()
+        if not post_usage:
+            post_usage = PostUsage(user_id=user_id)
+            db.session.add(post_usage)
+        
+        # Update monthly limit
+        if 'monthly_limit' in data:
+            post_usage.set_monthly_limit(data['monthly_limit'])
+        elif 'subscription' in data:
+            # Auto-set limit based on subscription
+            post_usage.set_monthly_limit(user.get_subscription_limits())
+        
+        # Reset posts generated if requested
+        if data.get('reset_usage', False):
+            post_usage.posts_generated = 0
+            post_usage.posts_posted = 0
+        
+        db.session.commit()
+        
+        return jsonify({
+            'user': user.to_dict(),
+            'message': 'Subscription updated successfully'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@debug_admin_bp.route('/debug-users/<int:user_id>/usage', methods=['GET'])
+def get_user_usage(user_id):
+    """Get detailed usage information for a user."""
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        post_usage = PostUsage.query.filter_by(user_id=user_id).first()
+        if not post_usage:
+            # Create default post usage if it doesn't exist
+            post_usage = PostUsage(
+                user_id=user_id,
+                monthly_limit=user.get_subscription_limits()
+            )
+            db.session.add(post_usage)
+            db.session.commit()
+        
+        return jsonify({
+            'user_id': user_id,
+            'username': user.username,
+            'subscription': user.subscription,
+            'usage': post_usage.to_dict(),
+            'subscription_limits': {
+                'free': 10,
+                'basic': 50,
+                'premium': 200,
+                'enterprise': 1000
+            }
+        }), 200
+        
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 

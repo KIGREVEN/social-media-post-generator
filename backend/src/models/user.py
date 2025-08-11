@@ -12,6 +12,7 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default='user', nullable=False)  # 'admin' or 'user'
+    subscription = db.Column(db.String(20), default='free', nullable=False)  # 'free', 'basic', 'premium', 'enterprise'
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
@@ -40,6 +41,16 @@ class User(db.Model):
         """Check if the user has admin role."""
         return self.role == 'admin'
 
+    def get_subscription_limits(self):
+        """Get the post limits based on subscription type."""
+        limits = {
+            'free': 10,
+            'basic': 50,
+            'premium': 200,
+            'enterprise': 1000
+        }
+        return limits.get(self.subscription, 10)
+
     def to_dict(self, include_sensitive=False):
         """Convert user to dictionary."""
         data = {
@@ -47,10 +58,15 @@ class User(db.Model):
             'username': self.username,
             'email': self.email,
             'role': self.role,
+            'subscription': self.subscription,
             'is_active': self.is_active,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+        
+        # Add post usage information if available
+        if self.post_usage:
+            data['post_usage'] = self.post_usage.to_dict()
         
         if include_sensitive:
             data['password_hash'] = self.password_hash
