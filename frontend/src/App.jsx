@@ -9,7 +9,7 @@ import DashboardPage from './pages/DashboardPage'
 import PostGeneratorPage from './pages/PostGeneratorPage'
 import PostsPage from './pages/PostsPage'
 import SocialAccountsPage from './pages/SocialAccountsPage'
-import AdminPageComplete from './pages/AdminPageComplete'
+import AdminPageFixed from './pages/AdminPageFixed'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -60,7 +60,7 @@ function App() {
                 path="/admin" 
                 element={
                   <ProtectedRoute requireAdmin={true}>
-                    <AdminPageComplete />
+                    <AdminPageFixed />
                   </ProtectedRoute>
                 } 
               />
