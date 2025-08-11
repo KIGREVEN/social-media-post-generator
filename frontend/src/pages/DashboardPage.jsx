@@ -31,8 +31,8 @@ const DashboardPage = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch usage statistics
-      const usageResponse = await fetch(`${API_BASE_URL}/api/posts/usage`, {
+      // Fetch current user profile with updated subscription info
+      const profileResponse = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -55,14 +55,17 @@ const DashboardPage = () => {
         }
       })
 
-      const [usageData, postsData, accountsData] = await Promise.all([
-        usageResponse.ok ? usageResponse.json() : { usage: null },
+      const [profileData, postsData, accountsData] = await Promise.all([
+        profileResponse.ok ? profileResponse.json() : { user: null },
         postsResponse.ok ? postsResponse.json() : { posts: [] },
         accountsResponse.ok ? accountsResponse.json() : { accounts: [] }
       ])
 
+      // Use post_usage from profile data for accurate limits
+      const usage = profileData.user?.post_usage || null
+
       setStats({
-        usage: usageData.usage,
+        usage: usage,
         recentPosts: postsData.posts || [],
         connectedAccounts: accountsData.accounts || []
       })
