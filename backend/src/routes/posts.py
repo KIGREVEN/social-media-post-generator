@@ -340,3 +340,81 @@ def get_usage():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+
+@posts_bp.route('/generate-test', methods=['POST'])
+def generate_post_test():
+    """Test-Route für Post-Generierung ohne JWT."""
+    try:
+        print("🧪 Test-Route aufgerufen - ohne JWT-Authentifizierung")
+        
+        data = request.get_json()
+        profile_url = data.get('profile_url')
+        post_theme = data.get('post_theme')
+        platform = data.get('platform', 'linkedin')
+        
+        if not profile_url or not post_theme:
+            return jsonify({'error': 'Profile URL and post theme are required'}), 400
+        
+        # Direkte OpenAI-Integration ohne User-Checks
+        try:
+            api_key = current_app.config.get('OPENAI_API_KEY')
+            if not api_key:
+                return jsonify({
+                    'error': 'OpenAI API key not configured',
+                    'debug_info': 'OPENAI_API_KEY environment variable missing'
+                }), 500
+            
+            # OpenAI API direkt verwenden
+            import openai
+            openai.api_key = api_key
+            
+            # Test API-Konnektivität
+            test_response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1
+            )
+            
+            # Generiere tatsächlichen Post
+            prompt = f"""
+            Erstelle einen professionellen {platform} Post über das Thema: {post_theme}
+            Basierend auf der Website: {profile_url}
+            
+            Der Post sollte:
+            - Professionell und ansprechend sein
+            - Relevante Hashtags enthalten
+            - Call-to-Action haben
+            - Für {platform} optimiert sein
+            """
+            
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=500,
+                temperature=0.7
+            )
+            
+            post_content = response.choices[0].message.content.strip()
+            
+            return jsonify({
+                'success': True,
+                'post_content': post_content,
+                'platform': platform,
+                'debug_info': 'Test-Route erfolgreich - OpenAI funktioniert!'
+            }), 200
+            
+        except Exception as openai_error:
+            return jsonify({
+                'error': 'OpenAI API Error',
+                'details': str(openai_error),
+                'debug_info': 'Fehler bei OpenAI-Kommunikation'
+            }), 500
+            
+    except Exception as e:
+        return jsonify({
+            'error': 'Server Error',
+            'details': str(e),
+            'debug_info': 'Allgemeiner Server-Fehler'
+        }), 500
+
