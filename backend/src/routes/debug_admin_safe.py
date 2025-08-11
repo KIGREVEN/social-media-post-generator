@@ -378,3 +378,126 @@ def migration_status_safe():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@debug_admin_safe_bp.route('/api/debug-admin-safe/run-migration', methods=['POST'])
+def run_migration_safe():
+    """Run database migration to add subscription column."""
+    try:
+        # Check if subscription column already exists
+        has_subscription = check_column_exists('users', 'subscription')
+        
+        if has_subscription:
+            return jsonify({
+                'success': True,
+                'message': 'Migration already completed - subscription column exists',
+                'subscription_column_exists': True
+            })
+        
+        results = []
+        results.append("🔄 Adding subscription column to users table...")
+        
+        # Add subscription column with default value 'free'
+        if 'postgresql' in str(db.engine.url):
+            # PostgreSQL
+            db.session.execute(text("""
+                ALTER TABLE users 
+                ADD COLUMN subscription VARCHAR(20) DEFAULT 'free' NOT NULL
+            """))
+            db.session.commit()
+            results.append("✅ Added subscription column (PostgreSQL)")
+        else:
+            # SQLite - need to recreate table
+            db.session.execute(text("""
+                CREATE TABLE users_new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username VARCHAR(80) UNIQUE NOT NULL,
+                    email VARCHAR(120) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL,
+                    role VARCHAR(20) DEFAULT 'user' NOT NULL,
+                    subscription VARCHAR(20) DEFAULT 'free' NOT NULL,
+                    is_active BOOLEAN DEFAULT 1 NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """))
+            
+            # Copy data from old table
+            db.session.execute(text("""
+                INSERT INTO users_new (id, username, email, password_hash, role, is_active, created_at, updated_at)
+                SELECT id, username, email, password_hash, role, is_active, created_at, updated_at
+                FROM users
+            """))
+            
+            # Drop old table and rename new one
+            db.session.execute(text("DROP TABLE users"))
+            db.session.execute(text("ALTER TABLE users_new RENAME TO users"))
+            db.session.commit()
+            results.append("✅ Added subscription column (SQLite)")
+        
+        # Update existing users to have default subscription
+        results.append("🔄 Updating existing users with default subscription...")
+        
+        result = db.session.execute(text("""
+            UPDATE users 
+            SET subscription = 'free' 
+            WHERE subscription IS NULL OR subscription = ''
+        """))
+        db.session.commit()
+        
+        updated_count = result.rowcount
+        results.append(f"✅ Updated {updated_count} users with default subscription")
+        
+        # Verify migration
+        results.append("🔍 Verifying migration...")
+        
+        result = db.session.execute(text("""
+            SELECT COUNT(*) as total_users,
+                   COUNT(CASE WHEN subscription = 'free' THEN 1 END) as free_users,
+                   COUNT(CASE WHEN subscription IS NOT NULL THEN 1 END) as users_with_subscription
+            FROM users
+        """))
+        
+        row = result.fetchone()
+        total_users = row[0]
+        free_users = row[1]
+        users_with_subscription = row[2]
+        
+        results.append(f"📊 Migration verification:")
+        results.append(f"   Total users: {total_users}")
+        results.append(f"   Users with subscription: {users_with_subscription}")
+        results.append(f"   Free subscription users: {free_users}")
+        
+        if total_users == 0:
+            results.append("✅ No users yet - migration ready for when users are created")
+        elif users_with_subscription == total_users:
+            results.append("✅ Migration successful - all users have subscription field")
+        else:
+            results.append("❌ Migration incomplete - some users missing subscription")
+            return jsonify({
+                'success': False,
+                'message': 'Migration verification failed',
+                'results': results
+            }), 500
+        
+        return jsonify({
+            'success': True,
+            'message': 'Database migration completed successfully!',
+            'subscription_column_exists': True,
+            'results': results
+        })
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'Database error: {str(e)}',
+            'results': results if 'results' in locals() else []
+        }), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': f'Unexpected error: {str(e)}',
+            'results': results if 'results' in locals() else []
+        }), 500
+
