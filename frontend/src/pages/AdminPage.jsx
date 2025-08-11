@@ -33,19 +33,15 @@ const AdminPage = () => {
   // Fetch system statistics
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-stats`)
       
       if (response.ok) {
         const data = await response.json()
         setStats(data)
       } else {
-        throw new Error('Failed to fetch stats')
+        setError('Fehler beim Laden der Statistiken')
       }
-    } catch (err) {
+    } catch (error) {
       setError('Fehler beim Laden der Statistiken')
     }
   }
@@ -53,11 +49,7 @@ const AdminPage = () => {
   // Fetch all users
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-users`)
       
       if (response.ok) {
         const data = await response.json()
@@ -73,19 +65,15 @@ const AdminPage = () => {
   // Fetch all posts
   const fetchPosts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/posts`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-posts`)
       
       if (response.ok) {
         const data = await response.json()
         setPosts(data.posts || [])
       } else {
-        throw new Error('Failed to fetch posts')
+        setError('Fehler beim Laden der Posts')
       }
-    } catch (err) {
+    } catch (error) {
       setError('Fehler beim Laden der Posts')
     }
   }
