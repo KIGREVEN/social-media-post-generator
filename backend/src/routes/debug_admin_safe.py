@@ -587,3 +587,73 @@ def test_openai_config():
             'message': 'Error testing OpenAI configuration'
         }), 500
 
+
+@debug_admin_safe_bp.route('/jwt-debug', methods=['POST'])
+def jwt_debug():
+    """Debug JWT-Token-Verifikation."""
+    try:
+        from flask import current_app
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({
+                'error': 'No Authorization header',
+                'headers': dict(request.headers)
+            }), 400
+        
+        # Extrahiere Token
+        if auth_header.startswith('Bearer '):
+            token = auth_header[7:]
+        else:
+            token = auth_header
+        
+        # Analysiere Token ohne Verifikation
+        import jwt
+        header = jwt.get_unverified_header(token)
+        payload = jwt.decode(token, options={"verify_signature": False})
+        
+        # Teste verschiedene Secrets
+        secrets = [
+            current_app.config.get('JWT_SECRET_KEY'),
+            current_app.config.get('SECRET_KEY'),
+            'social-media-post-generator-jwt-secret-key-2025',
+            'social-media-post-generator-secret-key-2025'
+        ]
+        
+        verification_results = []
+        for secret in secrets:
+            if not secret:
+                continue
+            try:
+                verified_payload = jwt.decode(token, secret, algorithms=['HS256'])
+                verification_results.append({
+                    'secret_preview': secret[:10] + '...',
+                    'status': 'valid',
+                    'payload': verified_payload
+                })
+            except jwt.ExpiredSignatureError:
+                verification_results.append({
+                    'secret_preview': secret[:10] + '...',
+                    'status': 'expired',
+                    'error': 'Token expired'
+                })
+            except jwt.InvalidTokenError as e:
+                verification_results.append({
+                    'secret_preview': secret[:10] + '...',
+                    'status': 'invalid',
+                    'error': str(e)
+                })
+        
+        return jsonify({
+            'token_header': header,
+            'token_payload': payload,
+            'verification_results': verification_results,
+            'config_jwt_secret': current_app.config.get('JWT_SECRET_KEY', 'NOT_SET')[:10] + '...',
+            'config_secret': current_app.config.get('SECRET_KEY', 'NOT_SET')[:10] + '...'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'error': 'Debug failed',
+            'details': str(e)
+        }), 500
+
