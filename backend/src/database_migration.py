@@ -1,27 +1,13 @@
 #!/usr/bin/env python3
 """
 Database Migration Script for Social Media Post Generator
-Adds subscription field to users table
+Adds subscription field to users table - Pure SQLAlchemy version
 """
 
 import os
 import sys
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.exc import SQLAlchemyError
-
-# Ensure psycopg2-binary is available for PostgreSQL connections
-try:
-    import psycopg2
-except ImportError:
-    try:
-        import psycopg
-        # psycopg3 compatibility
-        import psycopg as psycopg2
-    except ImportError:
-        print("❌ Neither psycopg2 nor psycopg is available. Installing psycopg2-binary...")
-        import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2-binary"])
-        import psycopg2
 
 def get_database_url():
     """Get database URL from environment variables."""
@@ -77,19 +63,22 @@ def add_subscription_column(engine):
         
         # Add subscription column with default value 'free'
         with engine.connect() as conn:
-            # For PostgreSQL
-            if 'postgresql' in str(engine.url):
+            # Use raw SQL that works with both PostgreSQL and SQLite
+            try:
+                # Try PostgreSQL syntax first
                 conn.execute(text("""
                     ALTER TABLE users 
                     ADD COLUMN subscription VARCHAR(20) DEFAULT 'free' NOT NULL
                 """))
                 conn.commit()
                 print("✅ Added subscription column (PostgreSQL)")
-            
-            # For SQLite
-            else:
-                # SQLite doesn't support ALTER TABLE ADD COLUMN with DEFAULT and NOT NULL
-                # We need to recreate the table
+            except Exception as e:
+                # If PostgreSQL syntax fails, try SQLite approach
+                print(f"PostgreSQL syntax failed: {e}")
+                print("Trying SQLite approach...")
+                conn.rollback()
+                
+                # For SQLite, we need to recreate the table
                 conn.execute(text("""
                     CREATE TABLE users_new (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -212,8 +201,8 @@ def main():
     print(f"📍 Database URL: {database_url.split('@')[0]}@***")
     
     try:
-        # Create engine
-        engine = create_engine(database_url)
+        # Create engine with connection pooling disabled for migration
+        engine = create_engine(database_url, poolclass=None)
         
         # Test connection
         with engine.connect() as conn:
