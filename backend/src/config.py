@@ -6,8 +6,8 @@ load_dotenv()
 
 class Config:
     """Base configuration class."""
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'social-media-post-generator-secret-key-2025'
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'social-media-post-generator-jwt-secret-key-2025'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # OpenAI Configuration
