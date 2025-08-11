@@ -39,10 +39,9 @@ services:
       - key: INSTAGRAM_CLIENT_SECRET
         sync: false
 
-  # Frontend Service
-  - type: web
+  # Frontend Service (Static Site)
+  - type: static
     name: social-media-post-generator-frontend
-    env: node
     buildCommand: |
       cd frontend
       npm install
@@ -56,5 +55,4 @@ services:
 databases:
   - name: social-media-post-generator-db
     databaseName: social_media_post_generator
-    user: postgres
 
