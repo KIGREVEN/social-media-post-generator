@@ -11,6 +11,21 @@ from flask_migrate import Migrate
 from src.config import config
 from src.models import db, User, Post, SocialAccount, PostUsage
 
+def run_database_migration():
+    """Run database migration on startup."""
+    try:
+        from src.database_migration import main as migrate_main
+        print("🔄 Running database migration on startup...")
+        result = migrate_main()
+        if result == 0:
+            print("✅ Database migration completed successfully")
+        else:
+            print("❌ Database migration failed")
+        return result == 0
+    except Exception as e:
+        print(f"❌ Error running database migration: {e}")
+        return False
+
 def create_app(config_name=None):
     """Application factory pattern."""
     if config_name is None:
@@ -73,6 +88,8 @@ def create_app(config_name=None):
     # Create database tables
     with app.app_context():
         db.create_all()
+        # Run database migration for subscription field
+        run_database_migration()
     
     # Health check endpoint
     @app.route('/health')
