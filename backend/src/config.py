@@ -1,0 +1,55 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+class Config:
+    """Base configuration class."""
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # OpenAI Configuration
+    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+    
+    # Social Media OAuth Configuration
+    LINKEDIN_CLIENT_ID = os.environ.get('LINKEDIN_CLIENT_ID')
+    LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET')
+    FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID')
+    FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
+    TWITTER_CLIENT_ID = os.environ.get('TWITTER_CLIENT_ID')
+    TWITTER_CLIENT_SECRET = os.environ.get('TWITTER_CLIENT_SECRET')
+    INSTAGRAM_CLIENT_ID = os.environ.get('INSTAGRAM_CLIENT_ID')
+    INSTAGRAM_CLIENT_SECRET = os.environ.get('INSTAGRAM_CLIENT_SECRET')
+    
+    # CORS Configuration
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    
+    # App Settings
+    APP_NAME = os.environ.get('APP_NAME', 'Social Media Post Generator')
+    APP_VERSION = os.environ.get('APP_VERSION', '1.0.0')
+
+class DevelopmentConfig(Config):
+    """Development configuration."""
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
+
+class ProductionConfig(Config):
+    """Production configuration."""
+    DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+
+class TestingConfig(Config):
+    """Testing configuration."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+
+# Configuration dictionary
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
+}
+
