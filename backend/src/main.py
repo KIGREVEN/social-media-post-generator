@@ -3,7 +3,7 @@ import sys
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, request, redirect
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
@@ -24,12 +24,23 @@ def create_app(config_name=None):
     migrate = Migrate(app, db)
     jwt = JWTManager(app)
     
-    # Configure CORS
+    # Configure CORS with comprehensive settings
     CORS(app, 
          origins=app.config['CORS_ORIGINS'],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-         allow_headers=['Content-Type', 'Authorization'],
-         supports_credentials=True)
+         allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+         supports_credentials=True,
+         send_wildcard=False,
+         vary_header=True)
+    
+    # Handle HTTPS redirects properly for CORS
+    @app.before_request
+    def force_https():
+        if not request.is_secure and app.config.get('FLASK_ENV') == 'production':
+            # Don't redirect OPTIONS requests (CORS preflight)
+            if request.method == 'OPTIONS':
+                return
+            return redirect(request.url.replace('http://', 'https://'), code=301)
     
     # Register blueprints
     from src.routes.auth import auth_bp
