@@ -24,7 +24,7 @@ class Config:
     INSTAGRAM_CLIENT_SECRET = os.environ.get('INSTAGRAM_CLIENT_SECRET')
     
     # CORS Configuration
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000').split(',')
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:3000,https://social-media-post-generator-frontend.onrender.com').split(',')
     
     # App Settings
     APP_NAME = os.environ.get('APP_NAME', 'Social Media Post Generator')
