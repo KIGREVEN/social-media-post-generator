@@ -5,11 +5,7 @@ Safe Debug Admin routes that work without subscription column
 from flask import Blueprint, jsonify, request
 from sqlalchemy import text, func, inspect
 from sqlalchemy.exc import SQLAlchemyError
-from src.database import db
-from src.models.user import User
-from src.models.post import Post
-from src.models.social_account import SocialAccount
-from src.models.post_usage import PostUsage
+from src.models import db, User, Post, SocialAccount, PostUsage
 import bcrypt
 from datetime import datetime
 

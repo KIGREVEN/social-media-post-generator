@@ -5,7 +5,7 @@ Migration API endpoints for database schema updates
 from flask import Blueprint, jsonify, request
 from sqlalchemy import text, inspect
 from sqlalchemy.exc import SQLAlchemyError
-from src.database import db
+from src.models import db
 import os
 
 migration_bp = Blueprint('migration', __name__)
