@@ -9,6 +9,20 @@ import sys
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 
+# Ensure psycopg2-binary is available for PostgreSQL connections
+try:
+    import psycopg2
+except ImportError:
+    try:
+        import psycopg
+        # psycopg3 compatibility
+        import psycopg as psycopg2
+    except ImportError:
+        print("❌ Neither psycopg2 nor psycopg is available. Installing psycopg2-binary...")
+        import subprocess
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2-binary"])
+        import psycopg2
+
 def get_database_url():
     """Get database URL from environment variables."""
     database_url = os.getenv('DATABASE_URL')
