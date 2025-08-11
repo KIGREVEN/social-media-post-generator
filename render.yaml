@@ -39,18 +39,6 @@ services:
       - key: INSTAGRAM_CLIENT_SECRET
         sync: false
 
-  # Frontend Service (Static Site)
-  - type: static
-    name: social-media-post-generator-frontend
-    buildCommand: |
-      cd frontend
-      npm install
-      npm run build
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://social-media-post-generator-backend.onrender.com
-
 # Database
 databases:
   - name: social-media-post-generator-db
