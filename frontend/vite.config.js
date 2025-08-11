@@ -11,4 +11,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://social-media-post-generator-backend.onrender.com',
+        changeOrigin: true,
+        secure: true,
+      }
+    }
+  }
 })
+
