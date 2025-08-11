@@ -16,7 +16,7 @@ Da Render.com Blueprint nur Backend Services unterstützt, müssen Frontend und 
    - **Name:** `social-media-post-generator-frontend`
    - **Branch:** `main`
    - **Root Directory:** `frontend`
-   - **Build Command:** `npm install && npm run build`
+   - **Build Command:** `pnpm install && pnpm run build`
    - **Publish Directory:** `dist`
 
 4. **Environment Variables:**
