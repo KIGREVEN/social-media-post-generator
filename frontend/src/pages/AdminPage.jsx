@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext'
 
 const AdminPage = () => {
   const { token } = useAuth()
+  const API_BASE_URL = import.meta.env.VITE_API_URL || ''
   const [stats, setStats] = useState(null)
   const [users, setUsers] = useState([])
   const [posts, setPosts] = useState([])
@@ -32,7 +33,7 @@ const AdminPage = () => {
   // Fetch system statistics
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/stats', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -52,7 +53,7 @@ const AdminPage = () => {
   // Fetch all users
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -72,7 +73,7 @@ const AdminPage = () => {
   // Fetch all posts
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/admin/posts', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/posts`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -92,7 +93,7 @@ const AdminPage = () => {
   // Create new user
   const createUser = async () => {
     try {
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,7 +119,7 @@ const AdminPage = () => {
   // Update user
   const updateUser = async (userId, updates) => {
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -144,7 +145,7 @@ const AdminPage = () => {
   // Delete user
   const deleteUser = async (userId) => {
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
