@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,7 +22,7 @@ import {
 import { toast } from 'sonner'
 
 const PostGeneratorPage = () => {
-  const { token, API_BASE_URL } = useAuth()
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://social-media-post-generator-backend.onrender.com'
   
   const [formData, setFormData] = useState({
     profile_url: '',
@@ -62,28 +61,16 @@ const PostGeneratorPage = () => {
     setError('')
 
     try {
-      // Debug: Token-Validierung
       console.log('🔍 Debug Info:');
-      console.log('Token exists:', !!token);
-      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'null');
       console.log('API_BASE_URL:', API_BASE_URL);
-      
-      // Validiere Token vor Request
-      if (!token) {
-        throw new Error('Kein Authentifizierungs-Token verfügbar. Bitte melden Sie sich erneut an.');
-      }
-
-      const headers = {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      };
-      
-      console.log('Request headers:', headers);
       console.log('Request body:', JSON.stringify(formData, null, 2));
 
       const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
         method: 'POST',
-        headers: headers,
+        headers: {
+          'Content-Type': 'application/json'
+          // Kein Authorization Header mehr benötigt!
+        },
         body: JSON.stringify(formData)
       });
 
@@ -100,12 +87,10 @@ const PostGeneratorPage = () => {
         // Detaillierte Fehlerbehandlung
         let errorMessage = data.error || 'Fehler beim Generieren des Posts';
         
-        if (response.status === 401) {
-          errorMessage = 'Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.';
-        } else if (response.status === 422) {
-          errorMessage = 'Token-Validierung fehlgeschlagen: ' + (data.error || 'Unbekannter Fehler');
-        } else if (response.status === 429) {
+        if (response.status === 429) {
           errorMessage = 'Monatliches Limit erreicht. Bitte upgraden Sie Ihr Abonnement.';
+        } else if (response.status === 500) {
+          errorMessage = 'Server-Fehler: ' + (data.details || 'Unbekannter Fehler');
         }
         
         setError(errorMessage);
@@ -114,10 +99,6 @@ const PostGeneratorPage = () => {
     } catch (error) {
       console.error('Generate post error:', error);
       let errorMessage = 'Verbindungsfehler';
-      
-      if (error.message.includes('Token')) {
-        errorMessage = error.message;
-      }
       
       setError(errorMessage);
       toast.error(errorMessage);
