@@ -38,17 +38,20 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const data = await response.json()
         setUser(data.user)
-      } else {
-        // Token is invalid, remove it
+      } else if (response.status === 401) {
+        // Only remove token on 401 (Unauthorized) - token is actually invalid
+        console.log('Token expired or invalid, removing...')
         localStorage.removeItem('token')
         setToken(null)
         setUser(null)
+      } else {
+        // For other errors (422, 500, etc.), keep the token but log the error
+        console.error('Error fetching user profile:', response.status, response.statusText)
+        // Don't remove the token, it might still be valid
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error)
-      localStorage.removeItem('token')
-      setToken(null)
-      setUser(null)
+      console.error('Network error fetching user profile:', error)
+      // Don't remove token on network errors
     } finally {
       setLoading(false)
     }
