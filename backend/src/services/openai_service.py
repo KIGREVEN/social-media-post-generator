@@ -58,19 +58,58 @@ class OpenAIService:
     
     def generate_image(self, prompt: str, size: str = "1024x1024") -> str:
         """
-        Generate an image using available image generation services.
-        Note: Image generation is currently not available with this API key.
+        Generate an image using GPT-Image-1 via Responses API.
         
         Args:
             prompt: Description for image generation
-            size: Image size (256x256, 512x512, 1024x1024)
+            size: Image size (not used in Responses API, but kept for compatibility)
             
         Returns:
-            Placeholder message or alternative solution
+            Base64 encoded image data or URL
         """
-        # Image generation is not available with current API access
-        # Return a placeholder or alternative solution
-        return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
+        try:
+            # Use Responses API with image_generation tool (GPT-Image-1)
+            response = self.client.responses.create(
+                model="gpt-4.1-mini",
+                input=f"Generate a professional business image: {prompt}. Style: Clean, professional, high-quality business aesthetic suitable for social media.",
+                tools=[{"type": "image_generation"}],
+            )
+            
+            # Extract image data from response
+            image_data = [
+                output.result
+                for output in response.output
+                if output.type == "image_generation_call"
+            ]
+            
+            if image_data:
+                # Return base64 encoded image data
+                return f"data:image/png;base64,{image_data[0]}"
+            else:
+                raise Exception("No image data found in response")
+            
+        except Exception as e:
+            # Log the error for debugging
+            print(f"GPT-Image-1 Responses API error: {str(e)}")
+            
+            # Fallback to traditional Images API with DALL-E 3
+            try:
+                response = self.client.images.generate(
+                    model="dall-e-3",
+                    prompt=prompt,
+                    n=1,
+                    size=size,
+                    quality="standard",
+                    style="natural"
+                )
+                
+                return response.data[0].url
+                
+            except Exception as fallback_error:
+                print(f"DALL-E 3 fallback error: {str(fallback_error)}")
+                
+                # Final fallback to placeholder
+                return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
     
     def create_image_prompt(self, post_theme: str, company_info: str = "") -> str:
         """
