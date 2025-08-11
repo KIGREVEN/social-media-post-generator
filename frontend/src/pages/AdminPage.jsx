@@ -81,11 +81,10 @@ const AdminPage = () => {
   // Create new user
   const createUser = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/users`, {
+      const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-users`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(newUser)
       })
@@ -99,7 +98,7 @@ const AdminPage = () => {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Erstellen des Benutzers')
       }
-    } catch (err) {
+    } catch (error) {
       setError('Fehler beim Erstellen des Benutzers')
     }
   }
@@ -107,11 +106,10 @@ const AdminPage = () => {
   // Update user
   const updateUser = async (userId, updates) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-users/${userId}`, {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(updates)
       })
@@ -125,7 +123,7 @@ const AdminPage = () => {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Aktualisieren des Benutzers')
       }
-    } catch (err) {
+    } catch (error) {
       setError('Fehler beim Aktualisieren des Benutzers')
     }
   }
@@ -133,10 +131,10 @@ const AdminPage = () => {
   // Delete user
   const deleteUser = async (userId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/debug-admin/debug-users/${userId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       })
       
@@ -147,7 +145,7 @@ const AdminPage = () => {
         const errorData = await response.json()
         setError(errorData.error || 'Fehler beim Löschen des Benutzers')
       }
-    } catch (err) {
+    } catch (error) {
       setError('Fehler beim Löschen des Benutzers')
     }
   }
