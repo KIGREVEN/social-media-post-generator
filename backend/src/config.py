@@ -29,16 +29,25 @@ class Config:
     # App Settings
     APP_NAME = os.environ.get('APP_NAME', 'Social Media Post Generator')
     APP_VERSION = os.environ.get('APP_VERSION', '1.0.0')
+    
+    @staticmethod
+    def get_database_uri():
+        """Get database URI with psycopg 3 compatibility."""
+        database_url = os.environ.get('DATABASE_URL')
+        if database_url and database_url.startswith('postgresql://'):
+            # Replace postgresql:// with postgresql+psycopg:// for psycopg 3
+            database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+        return database_url
 
 class DevelopmentConfig(Config):
     """Development configuration."""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
+    SQLALCHEMY_DATABASE_URI = Config.get_database_uri() or 'sqlite:///app.db'
 
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    SQLALCHEMY_DATABASE_URI = Config.get_database_uri()
 
 class TestingConfig(Config):
     """Testing configuration."""
