@@ -95,7 +95,12 @@ def create_app(config_name=None):
     with app.app_context():
         db.create_all()
         # Run database migration for subscription field
-        run_database_migration()
+        print("🚀 Starting database migration on app startup...")
+        migration_success = run_database_migration()
+        if migration_success:
+            print("✅ Database migration completed successfully on startup")
+        else:
+            print("❌ Database migration failed on startup")
     
     # Health check endpoint
     @app.route('/health')
