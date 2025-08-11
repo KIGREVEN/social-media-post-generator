@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from src.models import db, User, PostUsage
-from src.auth import token_required
 import logging
 
 # Blueprint erstellen
