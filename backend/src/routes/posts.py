@@ -48,56 +48,9 @@ def generate_post():
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Invalid platform'}), 400
         
-        # Initialize OpenAI service with detailed error handling
+        # Initialize OpenAI service
         try:
-            from flask import current_app
-            import openai
-            
-            # Debug: Check if API key is available
-            api_key = current_app.config.get('OPENAI_API_KEY')
-            if not api_key:
-                return jsonify({
-                    'error': 'OpenAI API key not configured in Flask app',
-                    'debug_info': 'OPENAI_API_KEY environment variable missing'
-                }), 500
-            
-            # Debug: Show API key preview
-            key_preview = f"{api_key[:10]}...{api_key[-4:]}" if len(api_key) > 14 else "key_too_short"
-            
-            # Set API key explicitly
-            openai.api_key = api_key
-            
-            # Test API connectivity first
-            try:
-                test_response = openai.ChatCompletion.create(
-                    model="gpt-3.5-turbo",
-                    messages=[{"role": "user", "content": "test"}],
-                    max_tokens=1
-                )
-            except openai.error.AuthenticationError as auth_error:
-                return jsonify({
-                    'error': 'OpenAI Authentication Error',
-                    'details': str(auth_error),
-                    'api_key_preview': key_preview,
-                    'debug_info': 'API key is invalid or expired'
-                }), 401
-            except openai.error.RateLimitError as rate_error:
-                return jsonify({
-                    'error': 'OpenAI Rate Limit Error',
-                    'details': str(rate_error),
-                    'debug_info': 'Too many requests to OpenAI API'
-                }), 429
-            except Exception as openai_error:
-                return jsonify({
-                    'error': 'OpenAI API Error',
-                    'details': str(openai_error),
-                    'api_key_preview': key_preview,
-                    'debug_info': 'General OpenAI API error'
-                }), 500
-            
-            # If we get here, OpenAI is working
             openai_service = OpenAIService()
-            
         except ValueError as e:
             return jsonify({
                 'error': 'OpenAI Service Configuration Error',
@@ -109,7 +62,7 @@ def generate_post():
                 'details': str(e)
             }), 500
         
-        # Generate the post content with specific error handling
+        # Generate the post content
         try:
             post_content = openai_service.generate_social_media_post(
                 profile_url=profile_url,
@@ -117,27 +70,10 @@ def generate_post():
                 additional_details=additional_details,
                 platform=platform
             )
-        except openai.error.AuthenticationError as auth_error:
-            return jsonify({
-                'error': 'Invalid OpenAI API key',
-                'details': str(auth_error),
-                'debug_info': 'Authentication failed during post generation'
-            }), 401
-        except openai.error.RateLimitError as rate_error:
-            return jsonify({
-                'error': 'OpenAI rate limit exceeded',
-                'details': str(rate_error)
-            }), 429
-        except openai.error.InvalidRequestError as req_error:
-            return jsonify({
-                'error': 'Invalid request to OpenAI',
-                'details': str(req_error)
-            }), 400
         except Exception as e:
             return jsonify({
                 'error': 'Post generation failed',
-                'details': str(e),
-                'debug_info': 'Error in generate_social_media_post function'
+                'details': str(e)
             }), 500
         
         # Generate image if requested
@@ -370,53 +306,23 @@ def generate_post_test():
         if not profile_url or not post_theme:
             return jsonify({'error': 'Profile URL and post theme are required'}), 400
         
-        # Direkte OpenAI-Integration ohne User-Checks
+        # Direkte OpenAI-Integration mit HTTP API calls
         try:
-            import os
-            api_key = os.environ.get('OPENAI_API_KEY')
-            if not api_key:
-                return jsonify({
-                    'error': 'OpenAI API key not configured',
-                    'debug_info': 'OPENAI_API_KEY environment variable missing'
-                }), 500
+            openai_service = OpenAIService()
             
-            # OpenAI API direkt verwenden
-            import openai
-            openai.api_key = api_key
-            
-            # Test API-Konnektivität
-            test_response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": "test"}],
-                max_tokens=1
+            # Generiere Post
+            post_content = openai_service.generate_social_media_post(
+                profile_url=profile_url,
+                post_theme=post_theme,
+                additional_details="",
+                platform=platform
             )
-            
-            # Generiere tatsächlichen Post
-            prompt = f"""
-            Erstelle einen professionellen {platform} Post über das Thema: {post_theme}
-            Basierend auf der Website: {profile_url}
-            
-            Der Post sollte:
-            - Professionell und ansprechend sein
-            - Relevante Hashtags enthalten
-            - Call-to-Action haben
-            - Für {platform} optimiert sein
-            """
-            
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=500,
-                temperature=0.7
-            )
-            
-            post_content = response.choices[0].message.content.strip()
             
             return jsonify({
                 'success': True,
                 'post_content': post_content,
                 'platform': platform,
-                'debug_info': 'Test-Route erfolgreich - OpenAI funktioniert!'
+                'debug_info': 'Test-Route erfolgreich - OpenAI HTTP API funktioniert!'
             }), 200
             
         except Exception as openai_error:

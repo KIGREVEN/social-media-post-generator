@@ -1,25 +1,30 @@
-import openai
-from openai import OpenAI
 import requests
 from flask import current_app
 from typing import Optional, Dict, Any
-import os
+import json
 
 class OpenAIService:
-    """Service for OpenAI API integration."""
+    """Service for OpenAI API integration using direct HTTP calls."""
     
     def __init__(self):
         self.api_key = current_app.config.get('OPENAI_API_KEY')
         if not self.api_key:
             raise ValueError("OpenAI API key not configured")
         
-        # Initialize the OpenAI client (v1.0+ API)
-        self.client = OpenAI(api_key=self.api_key)
+        # OpenAI API endpoints
+        self.chat_url = "https://api.openai.com/v1/chat/completions"
+        self.images_url = "https://api.openai.com/v1/images/generations"
+        
+        # Headers for API requests
+        self.headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
     
     def generate_social_media_post(self, profile_url: str, post_theme: str, 
                                  additional_details: str = "", platform: str = "linkedin") -> str:
         """
-        Generate a social media post using ChatGPT API.
+        Generate a social media post using ChatGPT API via HTTP requests.
         
         Args:
             profile_url: URL of the website/company to analyze
@@ -40,32 +45,40 @@ class OpenAIService:
                 website_content, platform
             )
             
-            # Generate the post using ChatGPT
-            response = self.client.chat.completions.create(
-                model="gpt-4.1-mini",  # Updated to available model
-                messages=[
+            # Prepare the API request payload
+            payload = {
+                "model": "gpt-4o-mini",
+                "messages": [
                     {"role": "system", "content": "Du bist ein Top-performing LinkedIn Content Creator mit 15 Jahren Erfahrung in B2B-Content."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=1000,
-                temperature=0.7
-            )
+                "max_tokens": 1000,
+                "temperature": 0.7
+            }
             
-            return response.choices[0].message.content.strip()
+            # Make the API request
+            response = requests.post(self.chat_url, headers=self.headers, json=payload)
+            
+            if response.status_code == 200:
+                result = response.json()
+                return result['choices'][0]['message']['content'].strip()
+            else:
+                error_msg = f"OpenAI API error: {response.status_code} - {response.text}"
+                raise Exception(error_msg)
             
         except Exception as e:
             raise Exception(f"Error generating post: {str(e)}")
     
     def generate_image(self, prompt: str, size: str = "1024x1024") -> str:
         """
-        Generate an image using GPT-Image-1 with working implementation.
+        Generate an image using GPT-Image-1 via HTTP API calls.
         
         Args:
             prompt: Description for image generation
             size: Image size (1024x1024, 1024x1536, 1536x1024)
             
         Returns:
-            Base64 encoded image data URL
+            Base64 encoded image data URL or placeholder
         """
         try:
             # Build professional prompt for GPT-Image-1
@@ -77,65 +90,76 @@ class OpenAIService:
             print(f"Size: {size}")
             print(f"=== END DEBUG ===")
             
-            # Generate image using GPT-Image-1 with working configuration
-            response = self.client.images.generate(
-                model="gpt-image-1",
-                prompt=professional_prompt,
-                size=size,
-                quality="high",  # GPT-Image-1 supports quality parameter
-                n=1,
-                response_format="b64_json"  # This is the key for working implementation!
-            )
+            # Prepare the API request payload for GPT-Image-1
+            payload = {
+                "model": "gpt-image-1",
+                "prompt": professional_prompt,
+                "size": size,
+                "quality": "high",
+                "n": 1,
+                "response_format": "b64_json"
+            }
             
-            print(f"OpenAI API Response: {response}")
-            print(f"Response type: {type(response)}")
-            print(f"Response data: {response.data if hasattr(response, 'data') else 'No data attribute'}")
+            # Make the API request
+            response = requests.post(self.images_url, headers=self.headers, json=payload)
             
-            # Process the base64 image response (working implementation)
-            if response and hasattr(response, 'data') and response.data and len(response.data) > 0:
-                first_item = response.data[0]
-                print(f"First data item: {first_item}")
-                print(f"First item type: {type(first_item)}")
+            print(f"OpenAI API Response Status: {response.status_code}")
+            print(f"Response headers: {response.headers}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                print(f"Response data: {result}")
                 
-                # Handle base64 response from GPT-Image-1 (working method)
-                if hasattr(first_item, 'b64_json') and first_item.b64_json:
-                    print("Processing base64 image from GPT-Image-1")
-                    # Return base64 data URL for direct use
-                    return f"data:image/png;base64,{first_item.b64_json}"
-                elif hasattr(first_item, 'url') and first_item.url:
-                    # Fallback for URL response
-                    print(f"Found URL (fallback): {first_item.url}")
-                    return first_item.url
+                # Process the base64 image response
+                if 'data' in result and len(result['data']) > 0:
+                    first_item = result['data'][0]
+                    
+                    # Handle base64 response from GPT-Image-1
+                    if 'b64_json' in first_item and first_item['b64_json']:
+                        print("Processing base64 image from GPT-Image-1")
+                        return f"data:image/png;base64,{first_item['b64_json']}"
+                    elif 'url' in first_item and first_item['url']:
+                        print(f"Found URL (fallback): {first_item['url']}")
+                        return first_item['url']
+                    else:
+                        print(f"No usable image data found. Available keys: {list(first_item.keys())}")
+                        raise Exception("No usable image data returned from GPT-Image-1")
                 else:
-                    print(f"No usable image data found. Available attributes: {[attr for attr in dir(first_item) if not attr.startswith('_')]}")
-                    raise Exception("No usable image data returned from GPT-Image-1")
+                    print("ERROR: Invalid response structure from OpenAI API")
+                    raise Exception("Invalid API response from GPT-Image-1")
             else:
-                print("ERROR: Invalid response structure from OpenAI API")
-                raise Exception("Invalid API response from GPT-Image-1")
+                print(f"GPT-Image-1 API error: {response.status_code} - {response.text}")
+                
+                # Fallback to DALL-E 3 if GPT-Image-1 fails
+                try:
+                    print("Falling back to DALL-E 3...")
+                    fallback_payload = {
+                        "model": "dall-e-3",
+                        "prompt": prompt,
+                        "n": 1,
+                        "size": size,
+                        "quality": "standard",
+                        "style": "natural"
+                    }
+                    
+                    fallback_response = requests.post(self.images_url, headers=self.headers, json=fallback_payload)
+                    
+                    if fallback_response.status_code == 200:
+                        fallback_result = fallback_response.json()
+                        return fallback_result['data'][0]['url']
+                    else:
+                        print(f"DALL-E 3 fallback error: {fallback_response.status_code} - {fallback_response.text}")
+                        raise Exception(f"DALL-E 3 fallback failed: {fallback_response.text}")
+                        
+                except Exception as fallback_error:
+                    print(f"DALL-E 3 fallback error: {str(fallback_error)}")
+                    # Final fallback to placeholder
+                    return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
             
         except Exception as e:
-            # Log the error for debugging
-            print(f"GPT-Image-1 error: {str(e)}")
-            
-            # Fallback to DALL-E 3 if GPT-Image-1 fails
-            try:
-                print("Falling back to DALL-E 3...")
-                response = self.client.images.generate(
-                    model="dall-e-3",
-                    prompt=prompt,
-                    n=1,
-                    size=size,
-                    quality="standard",
-                    style="natural"
-                )
-                
-                return response.data[0].url
-                
-            except Exception as fallback_error:
-                print(f"DALL-E 3 fallback error: {str(fallback_error)}")
-                
-                # Final fallback to placeholder
-                return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
+            print(f"Image generation error: {str(e)}")
+            # Final fallback to placeholder
+            return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
     
     def create_image_prompt(self, post_theme: str, company_info: str = "") -> str:
         """
