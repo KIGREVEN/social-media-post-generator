@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { generatePlannerIdeas } from '../services/plannerApi';
-import { generatePost } from '../services/api';
 
 const Planner = () => {
   // State management
@@ -133,14 +132,26 @@ const Planner = () => {
           // Create prompt for post generation
           const prompt = `Erstelle einen Social-Media-Post basierend auf: ${selectedIdea.title} – ${selectedIdea.hook}. Persona: ${selectedIdea.persona}. Funnel: ${selectedIdea.funnel}. Kanal(e): ${selectedIdea.channels.join(', ')}. Nutze klaren Hook→Nutzen→CTA.`;
           
-          // Generate post using existing API
-          const postData = await generatePost({
-            prompt: prompt,
-            channels: selectedIdea.channels.includes('LI') ? ['linkedin'] : ['facebook'], // Map to existing channel format
-            generateImage: true
+          // Generate post using direct API call
+          const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://social-media-post-generator-backend.onrender.com';
+          const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              profile_url: '',
+              post_theme: prompt,
+              additional_details: '',
+              platform: selectedIdea.channels.includes('LI') ? 'linkedin' : 'facebook',
+              generate_image: true
+            })
           });
 
-          createdPosts.push(postData);
+          if (response.ok) {
+            const postData = await response.json();
+            createdPosts.push(postData);
+          }
         } catch (err) {
           console.error(`Error creating post for idea ${selectedIdea.id}:`, err);
         }
