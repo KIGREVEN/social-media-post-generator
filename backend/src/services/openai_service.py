@@ -133,37 +133,9 @@ class OpenAIService:
                 error_text = response.text
                 print(f"❌ GPT-Image-1 API error: {response.status_code} - {error_text}")
                 
-                # Try DALL-E 3 as fallback
-                print("🔄 Attempting DALL-E 3 fallback...")
-                try:
-                    fallback_payload = {
-                        "model": "dall-e-3",
-                        "prompt": prompt,
-                        "n": 1,
-                        "size": size,
-                        "quality": "standard",
-                        "style": "natural"
-                    }
-                    
-                    fallback_response = requests.post(
-                        self.images_url, 
-                        headers=self.headers, 
-                        json=fallback_payload,
-                        timeout=60
-                    )
-                    
-                    if fallback_response.status_code == 200:
-                        fallback_result = fallback_response.json()
-                        print("✅ DALL-E 3 fallback successful!")
-                        return fallback_result['data'][0]['url']
-                    else:
-                        print(f"❌ DALL-E 3 fallback failed: {fallback_response.status_code}")
-                        raise Exception(f"DALL-E 3 fallback failed: {fallback_response.text}")
-                        
-                except Exception as fallback_error:
-                    print(f"❌ DALL-E 3 fallback error: {str(fallback_error)}")
-                    # Final fallback to placeholder
-                    return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
+                # No fallback - go directly to placeholder if GPT-Image-1 fails
+                print("🔄 GPT-Image-1 failed, using placeholder...")
+                return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
             
         except Exception as e:
             print(f"❌ Image generation error: {str(e)}")
