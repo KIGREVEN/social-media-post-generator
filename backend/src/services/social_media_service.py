@@ -152,9 +152,9 @@ class SocialMediaService:
         access_token = token_info['access_token']
         expires_in = token_info.get('expires_in', 5184000)  # Default 60 days
         
-        # Get user profile information
+        # Get user profile information using OpenID Connect
         profile_response = requests.get(
-            'https://api.linkedin.com/v2/people/~',
+            'https://api.linkedin.com/v2/userinfo',
             headers={'Authorization': f'Bearer {access_token}'}
         )
         
@@ -163,13 +163,14 @@ class SocialMediaService:
         
         profile_data = profile_response.json()
         
-        # Extract name information more robustly
-        first_name = profile_data.get('localizedFirstName', '')
-        last_name = profile_data.get('localizedLastName', '')
-        account_name = f"{first_name} {last_name}".strip()
+        # Extract name information from OpenID Connect response
+        given_name = profile_data.get('given_name', '')
+        family_name = profile_data.get('family_name', '')
+        account_name = f"{given_name} {family_name}".strip()
         
         if not account_name:
-            account_name = f"LinkedIn User {profile_data['id'][:8]}"
+            # Fallback to name field or email
+            account_name = profile_data.get('name', profile_data.get('email', f"LinkedIn User {profile_data.get('sub', 'Unknown')[:8]}"))
         
         # Save or update social account
         social_account = SocialAccount.query.filter_by(
@@ -179,7 +180,7 @@ class SocialMediaService:
         if not social_account:
             social_account = SocialAccount(user_id=user_id, platform='linkedin')
         
-        social_account.account_id = profile_data['id']
+        social_account.account_id = profile_data.get('sub', profile_data.get('email', 'unknown'))
         social_account.account_name = account_name
         social_account.access_token = access_token
         social_account.expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
