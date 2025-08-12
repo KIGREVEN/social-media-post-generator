@@ -72,10 +72,11 @@ class OpenAIService:
     def generate_image(self, prompt: str, size: str = "1024x1024") -> str:
         """
         Generate an image using GPT-Image-1 via direct HTTP API calls.
+        Following the official OpenAI API documentation.
         
         Args:
             prompt: Description for image generation
-            size: Image size (1024x1024, 1024x1536, 1536x1024)
+            size: Image size (1024x1024, 1024x1536, 1536x1024, auto)
             
         Returns:
             Base64 encoded image data URL or placeholder
@@ -86,13 +87,14 @@ class OpenAIService:
             print(f"Size: {size}")
             
             # Prepare the API request payload for GPT-Image-1
+            # According to OpenAI docs: model, prompt, size, quality are the main parameters
             payload = {
                 "model": "gpt-image-1",
                 "prompt": prompt,
                 "size": size,
-                "quality": "high",
-                "n": 1,
-                "response_format": "b64_json"  # Request base64 format
+                "quality": "high"
+                # Note: response_format is NOT a valid parameter for GPT-Image-1
+                # Base64 data is automatically available in response.data[0].b64_json
             }
             
             print(f"Payload: {payload}")
@@ -116,7 +118,7 @@ class OpenAIService:
                     first_item = result['data'][0]
                     print(f"Image data keys: {list(first_item.keys())}")
                     
-                    # Handle base64 response from GPT-Image-1
+                    # According to OpenAI docs, base64 data is in b64_json field
                     if 'b64_json' in first_item and first_item['b64_json']:
                         print("✅ GPT-Image-1 base64 image generated successfully!")
                         return f"data:image/png;base64,{first_item['b64_json']}"
