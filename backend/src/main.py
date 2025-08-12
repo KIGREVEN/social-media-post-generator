@@ -122,7 +122,7 @@ def create_app(config_name=None):
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
-    app.register_blueprint(posts_async_bp, url_prefix='/api/posts')
+    app.register_blueprint(posts_async_bp, url_prefix='/api/async')
     app.register_blueprint(social_bp, url_prefix='/api/social')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(super_admin_bp, url_prefix='/api/super-admin')
