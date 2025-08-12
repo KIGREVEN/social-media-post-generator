@@ -14,7 +14,9 @@ import {
   BarChart3,
   FileText,
   Image,
-  ExternalLink
+  ExternalLink,
+  Share2,
+  RefreshCw
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -30,6 +32,10 @@ const PostsPage = () => {
   const [stats, setStats] = useState({})
   const [selectedPost, setSelectedPost] = useState(null)
   const [showPostModal, setShowPostModal] = useState(false)
+  const [showPublishModal, setShowPublishModal] = useState(false)
+  const [selectedPlatforms, setSelectedPlatforms] = useState([])
+  const [publishing, setPublishing] = useState(false)
+  const [connectedAccounts, setConnectedAccounts] = useState([])
 
   const platforms = [
     { value: '', label: 'Alle Plattformen' },
@@ -49,7 +55,21 @@ const PostsPage = () => {
   useEffect(() => {
     fetchPosts()
     fetchStats()
+    fetchConnectedAccounts()
   }, [currentPage, selectedPlatform, searchTerm])
+
+  const fetchConnectedAccounts = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/social-accounts/accounts`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setConnectedAccounts(data.accounts.filter(acc => acc.is_active))
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der verbundenen Accounts:', error)
+    }
+  }
 
   const fetchPosts = async () => {
     try {
@@ -134,6 +154,49 @@ const PostsPage = () => {
   const handleViewPost = (post) => {
     setSelectedPost(post)
     setShowPostModal(true)
+  }
+
+  const handlePublishPost = (post) => {
+    setSelectedPost(post)
+    setSelectedPlatforms([])
+    setShowPublishModal(true)
+  }
+
+  const handlePublish = async () => {
+    if (selectedPlatforms.length === 0) {
+      toast.error('Bitte wählen Sie mindestens eine Plattform aus')
+      return
+    }
+
+    try {
+      setPublishing(true)
+      
+      const response = await fetch(`${API_BASE_URL}/api/social-accounts/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          post_id: selectedPost.id,
+          platforms: selectedPlatforms
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success(data.message)
+        setShowPublishModal(false)
+        fetchPosts()
+        fetchStats()
+      } else {
+        toast.error(data.error || 'Fehler beim Veröffentlichen')
+      }
+    } catch (error) {
+      toast.error('Verbindungsfehler beim Veröffentlichen')
+    } finally {
+      setPublishing(false)
+    }
   }
 
   const formatDate = (dateString) => {
@@ -312,6 +375,14 @@ const PostsPage = () => {
                       <Button
                         variant="outline"
                         size="sm"
+                        onClick={() => handlePublishPost(post)}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => handleDuplicatePost(post.id)}
                       >
                         <Copy className="h-4 w-4" />
@@ -436,6 +507,97 @@ const PostsPage = () => {
                     <p className="break-all text-blue-600">{selectedPost.profile_url}</p>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Publish Modal */}
+      {showPublishModal && selectedPost && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-xl font-bold">Post veröffentlichen</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPublishModal(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Post:</h3>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm">{truncateText(selectedPost.content, 100)}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Plattformen auswählen:</h3>
+                  <div className="space-y-2">
+                    {connectedAccounts.map(account => (
+                      <label key={account.platform} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedPlatforms.includes(account.platform)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPlatforms([...selectedPlatforms, account.platform])
+                            } else {
+                              setSelectedPlatforms(selectedPlatforms.filter(p => p !== account.platform))
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="capitalize">{account.platform}</span>
+                        <Badge className={platformColors[account.platform] || 'bg-gray-100 text-gray-800'}>
+                          {account.account_name}
+                        </Badge>
+                      </label>
+                    ))}
+                  </div>
+                  
+                  {connectedAccounts.length === 0 && (
+                    <p className="text-sm text-gray-600">
+                      Keine verbundenen Accounts gefunden. 
+                      <a href="/social-accounts" className="text-blue-600 hover:underline ml-1">
+                        Accounts verbinden
+                      </a>
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex space-x-2 pt-4">
+                  <Button
+                    onClick={handlePublish}
+                    disabled={publishing || selectedPlatforms.length === 0}
+                    className="flex-1"
+                  >
+                    {publishing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Veröffentliche...
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Veröffentlichen
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowPublishModal(false)}
+                    disabled={publishing}
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
