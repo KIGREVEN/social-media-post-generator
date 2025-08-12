@@ -183,32 +183,54 @@ def disconnect_social_account(platform):
 def publish_to_social_media():
     """Publish a post to connected social media platforms."""
     try:
+        print(f"=== PUBLISH REQUEST START ===")
+        print(f"Timestamp: {datetime.utcnow()}")
+        
         # Verwende einen Standard-User für alle Requests (vereinfacht)
         user = User.query.filter_by(username='admin').first()
         if not user:
+            print(f"ERROR: User 'admin' not found")
             return jsonify({'error': 'User not found'}), 404
         
         current_user_id = user.id
+        print(f"User ID: {current_user_id}")
         
         data = request.get_json()
+        print(f"Request data: {data}")
+        
         post_id = data.get('post_id')
         platforms = data.get('platforms', [])
         
+        print(f"Post ID: {post_id}")
+        print(f"Platforms: {platforms}")
+        
         if not post_id:
+            print(f"ERROR: Post ID is required")
             return jsonify({'error': 'Post ID is required'}), 400
         
         if not platforms:
+            print(f"ERROR: At least one platform must be selected")
             return jsonify({'error': 'At least one platform must be selected'}), 400
         
         # Get the post
         post = Post.query.filter_by(id=post_id, user_id=current_user_id).first()
         if not post:
+            print(f"ERROR: Post not found - ID: {post_id}, User: {current_user_id}")
             return jsonify({'error': 'Post not found'}), 404
+        
+        print(f"Post found: {post.title}")
+        print(f"Post content length: {len(post.content)}")
+        print(f"Post has image: {bool(post.generated_image_url)}")
+        if post.generated_image_url:
+            print(f"Image URL: {post.generated_image_url}")
         
         # Check connected accounts for selected platforms
         results = []
         for platform in platforms:
+            print(f"\n--- Processing platform: {platform} ---")
+            
             if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
+                print(f"ERROR: Unsupported platform: {platform}")
                 results.append({
                     'platform': platform,
                     'success': False,
@@ -221,12 +243,17 @@ def publish_to_social_media():
             ).first()
             
             if not social_account:
+                print(f"ERROR: No active {platform} account found for user {current_user_id}")
                 results.append({
                     'platform': platform,
                     'success': False,
                     'error': f'No active {platform.title()} account found'
                 })
                 continue
+            
+            print(f"Social account found: {social_account.account_name} (ID: {social_account.account_id})")
+            print(f"Account active: {social_account.is_active}")
+            print(f"Token expires: {social_account.expires_at}")
             
             # Use real API calls for publishing
             try:
@@ -235,10 +262,14 @@ def publish_to_social_media():
                 
                 # Get image URL if post has an image
                 image_url = post.generated_image_url if post.generated_image_url else None
+                print(f"Image URL for posting: {image_url}")
                 
                 # Call the appropriate posting method with image support
+                print(f"Calling {platform} posting method...")
                 if platform == 'linkedin':
+                    print(f"=== LINKEDIN POSTING START ===")
                     result = social_service._post_to_linkedin(social_account, post.content, image_url)
+                    print(f"=== LINKEDIN POSTING RESULT: {result} ===")
                 elif platform == 'facebook':
                     result = social_service._post_to_facebook(social_account, post.content, image_url)
                 elif platform == 'twitter':
@@ -247,6 +278,7 @@ def publish_to_social_media():
                     result = social_service._post_to_instagram(social_account, post.content, image_url)
                 
                 if result.get('success'):
+                    print(f"SUCCESS: {platform} posting successful")
                     # Mark post as published for this platform
                     post.is_posted = True
                     post.posted_at = datetime.utcnow()
@@ -261,6 +293,8 @@ def publish_to_social_media():
                         'media_asset': result.get('media_asset')
                     })
                 else:
+                    print(f"FAILURE: {platform} posting failed")
+                    print(f"Error details: {result}")
                     results.append({
                         'platform': platform,
                         'success': False,
@@ -270,10 +304,14 @@ def publish_to_social_media():
                     })
                 
             except Exception as e:
+                error_msg = f'Publishing exception for {platform}: {str(e)}'
+                print(f"EXCEPTION: {error_msg}")
+                import traceback
+                print(f"Traceback: {traceback.format_exc()}")
                 results.append({
                     'platform': platform,
                     'success': False,
-                    'error': f'Publishing exception: {str(e)}',
+                    'error': error_msg,
                     'exception': str(e)
                 })
         
@@ -283,16 +321,25 @@ def publish_to_social_media():
         successful_posts = len([r for r in results if r['success']])
         total_platforms = len(platforms)
         
-        return jsonify({
+        final_result = {
             'message': f'Published to {successful_posts}/{total_platforms} platforms',
             'results': results,
             'post_id': post_id,
             'success_rate': f'{successful_posts}/{total_platforms}'
-        }), 200
+        }
+        
+        print(f"=== PUBLISH REQUEST END ===")
+        print(f"Final result: {final_result}")
+        
+        return jsonify(final_result), 200
         
     except Exception as e:
+        error_msg = f'Publishing route exception: {str(e)}'
+        print(f"ROUTE EXCEPTION: {error_msg}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': error_msg}), 500
 
 @social_accounts_api_bp.route('/platforms', methods=['GET'])
 def get_supported_platforms():

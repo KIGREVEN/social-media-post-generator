@@ -1,6 +1,25 @@
-import os
 import sys
 import os
+import logging
+from datetime import datetime
+
+# Configure logging for production
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Ensure all print statements are flushed immediately
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
+print(f"=== APPLICATION STARTUP ===")
+print(f"Timestamp: {datetime.utcnow()}")
+print(f"Python version: {sys.version}")
+
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
