@@ -36,14 +36,19 @@ def generate_post():
         
         data = request.get_json()
         
-        profile_url = data.get('profile_url')
+        profile_url = data.get('profile_url', '')
         post_theme = data.get('post_theme')
         additional_details = data.get('additional_details', '')
         generate_image = data.get('generate_image', False)
         platform = data.get('platform', 'linkedin')
         
-        if not profile_url or not post_theme:
-            return jsonify({'error': 'Profile URL and post theme are required'}), 400
+        # Profile URL is optional for Content-Planner generated posts
+        if not post_theme:
+            return jsonify({'error': 'Post theme is required'}), 400
+        
+        # Use a default profile URL if none provided (for Content-Planner)
+        if not profile_url:
+            profile_url = 'https://example.com'
         
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Invalid platform'}), 400
