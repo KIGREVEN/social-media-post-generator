@@ -60,6 +60,11 @@ const Navbar = () => {
                       Content-Planner
                     </Button>
                   </Link>
+                  <Link to="/scheduler">
+                    <Button variant="ghost" size="sm">
+                      📅 Post-Planer
+                    </Button>
+                  </Link>
                   <Link to="/generate">
                     <Button variant="ghost" size="sm">
                       <PlusCircle className="w-4 h-4 mr-2" />
@@ -121,6 +126,11 @@ const Navbar = () => {
                         <Link to="/planner" className="w-full">
                           <Lightbulb className="w-4 h-4 mr-2" />
                           Content-Planner
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/scheduler" className="w-full">
+                          📅 Post-Planer
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

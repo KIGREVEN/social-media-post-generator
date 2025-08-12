@@ -29,7 +29,7 @@ from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 
 from src.config import config
-from src.models import db, User, Post, SocialAccount, PostUsage
+from src.models import db, User, Post, SocialAccount, PostUsage, ScheduledPost
 
 def run_database_migration():
     """Run database migration on startup using SQLAlchemy."""
@@ -98,6 +98,14 @@ def run_database_migration():
                 print("   This is normal if columns are already TEXT type")
         else:
             print("⚠️  Posts table will be created on first post creation")
+        
+        # Ensure all tables are created
+        print("🔄 Creating any missing database tables...")
+        try:
+            db.create_all()
+            print("✅ All database tables created/verified")
+        except Exception as e:
+            print(f"⚠️  Error creating tables: {e}")
         
         print("✅ Database migration completed successfully")
         return True
@@ -171,6 +179,7 @@ def create_app(config_name=None):
     from src.routes.migration import migration_bp
     from src.routes.subscription_api import subscription_api_bp
     from src.routes.planner import planner_bp
+    from src.routes.scheduler import scheduler_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
@@ -185,6 +194,7 @@ def create_app(config_name=None):
     app.register_blueprint(migration_bp, url_prefix='/api/migration')
     app.register_blueprint(subscription_api_bp, url_prefix='/api/subscription')
     app.register_blueprint(planner_bp, url_prefix='/api/planner')
+    app.register_blueprint(scheduler_bp, url_prefix='/api/scheduler')
     
     # Health check endpoint
     @app.route('/health')

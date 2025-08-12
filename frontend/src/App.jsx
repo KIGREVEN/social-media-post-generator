@@ -12,6 +12,7 @@ import SimplePostGeneratorPageAsync from './pages/SimplePostGeneratorPageAsync'
 import PostsPage from './pages/PostsPage'
 import SocialAccountsPage from './pages/SocialAccountsPage'
 import Planner from './pages/Planner'
+import Scheduler from './pages/Scheduler'
 import AdminPageFinalWorking from './pages/AdminPageFinalWorking'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
@@ -66,6 +67,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Planner />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/scheduler" 
+                element={
+                  <ProtectedRoute>
+                    <Scheduler />
                   </ProtectedRoute>
                 } 
               />
