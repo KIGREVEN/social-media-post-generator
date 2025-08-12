@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Wand2, Copy, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Wand2, Copy, Loader2, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 
 const SimplePostGeneratorPage = () => {
@@ -23,6 +23,9 @@ const SimplePostGeneratorPage = () => {
   const [generatedPost, setGeneratedPost] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [jobId, setJobId] = useState(null)
+  const [progress, setProgress] = useState('')
+  const [pollingInterval, setPollingInterval] = useState(null)
 
   const platforms = [
     { id: 'linkedin', name: 'LinkedIn', description: 'Professionelle Inhalte' },
@@ -39,6 +42,39 @@ const SimplePostGeneratorPage = () => {
     setError('')
   }
 
+  const pollJobStatus = async (jobId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/posts/status/${jobId}`)
+      const data = await response.json()
+      
+      if (response.ok) {
+        setProgress(data.progress || data.status)
+        
+        if (data.status === 'completed') {
+          setGeneratedPost(data.result.post)
+          setLoading(false)
+          setJobId(null)
+          clearInterval(pollingInterval)
+          setPollingInterval(null)
+          toast.success('Post erfolgreich generiert!')
+        } else if (data.status === 'error') {
+          setError(data.error || 'Unbekannter Fehler')
+          setLoading(false)
+          setJobId(null)
+          clearInterval(pollingInterval)
+          setPollingInterval(null)
+          toast.error('Fehler bei der Post-Generierung')
+        }
+        // If status is 'processing', continue polling
+      } else {
+        throw new Error(data.error || 'Status check failed')
+      }
+    } catch (error) {
+      console.error('Polling error:', error)
+      // Don't immediately fail on polling errors, try a few more times
+    }
+  }
+
   const handleGenerate = async () => {
     if (!formData.profile_url || !formData.post_theme) {
       setError('Bitte füllen Sie alle Pflichtfelder aus')
@@ -47,15 +83,68 @@ const SimplePostGeneratorPage = () => {
 
     setLoading(true)
     setError('')
+    setProgress('Starte Post-Generierung...')
 
     try {
-      console.log('🚀 Generiere Post ohne Authentication...');
-      console.log('API_BASE_URL:', API_BASE_URL);
-      console.log('Request body:', JSON.stringify(formData, null, 2));
+      console.log('🚀 Starte Async Post-Generierung...')
+      console.log('API_BASE_URL:', API_BASE_URL)
+      console.log('Request body:', JSON.stringify(formData, null, 2))
 
+      // Try async API first
+      const response = await fetch(`${API_BASE_URL}/api/posts/generate-async`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+      console.log('Response data:', data)
+
+      if (response.ok) {
+        setJobId(data.job_id)
+        setProgress('Post-Generierung gestartet...')
+        toast.success('Post-Generierung gestartet!')
+        
+        // Start polling for status
+        const interval = setInterval(() => {
+          pollJobStatus(data.job_id)
+        }, 2000) // Poll every 2 seconds
+        
+        setPollingInterval(interval)
+        
+        // Set a maximum timeout of 10 minutes
+        setTimeout(() => {
+          if (interval) {
+            clearInterval(interval)
+            setPollingInterval(null)
+            setLoading(false)
+            setError('Zeitüberschreitung: Die Generierung dauert zu lange. Bitte versuchen Sie es erneut.')
+            toast.error('Zeitüberschreitung')
+          }
+        }, 600000) // 10 minutes
+        
+      } else {
+        // If async API fails, fallback to sync API
+        console.log('Async API failed, trying sync API as fallback...')
+        await handleSyncGenerate()
+      }
+    } catch (error) {
+      console.error('Async generate error:', error)
+      // Fallback to sync API
+      console.log('Async API error, trying sync API as fallback...')
+      await handleSyncGenerate()
+    }
+  }
+
+  const handleSyncGenerate = async () => {
+    try {
+      setProgress('Fallback: Synchrone Generierung...')
+      
       // Create AbortController for timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes timeout
 
       const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
         method: 'POST',
@@ -66,40 +155,41 @@ const SimplePostGeneratorPage = () => {
         signal: controller.signal,
         // Additional timeout configurations
         keepalive: true
-      });
+      })
 
-      clearTimeout(timeoutId);
-      console.log('Response status:', response.status);
+      clearTimeout(timeoutId)
+      console.log('Sync Response status:', response.status)
 
-      const data = await response.json();
-      console.log('Response data:', data);
+      const data = await response.json()
+      console.log('Sync Response data:', data)
 
       if (response.ok) {
-        setGeneratedPost(data.post);
-        toast.success('Post erfolgreich generiert!');
+        setGeneratedPost(data.post)
+        setLoading(false)
+        toast.success('Post erfolgreich generiert!')
       } else {
-        let errorMessage = data.error || 'Fehler beim Generieren des Posts';
+        let errorMessage = data.error || 'Fehler beim Generieren des Posts'
         
         if (response.status === 429) {
-          errorMessage = 'Monatliches Limit erreicht.';
+          errorMessage = 'Monatliches Limit erreicht.'
         } else if (response.status === 500) {
-          errorMessage = 'Server-Fehler: ' + (data.details || 'Unbekannter Fehler');
+          errorMessage = 'Server-Fehler: ' + (data.details || 'Unbekannter Fehler')
         }
         
-        setError(errorMessage);
-        toast.error(errorMessage);
+        setError(errorMessage)
+        setLoading(false)
+        toast.error(errorMessage)
       }
     } catch (error) {
-      console.error('Generate post error:', error);
+      console.error('Sync generate error:', error)
       
       if (error.name === 'AbortError') {
-        setError('Zeitüberschreitung: GPT-Image-1 Generierung dauert länger als erwartet. Bitte versuchen Sie es erneut.');
-        toast.error('Zeitüberschreitung bei der Bildgenerierung');
+        setError('Zeitüberschreitung: GPT-Image-1 Generierung dauert länger als erwartet. Bitte versuchen Sie es erneut.')
+        toast.error('Zeitüberschreitung bei der Bildgenerierung')
       } else {
-        setError('Verbindungsfehler');
-        toast.error('Verbindungsfehler');
+        setError('Verbindungsfehler')
+        toast.error('Verbindungsfehler')
       }
-    } finally {
       setLoading(false)
     }
   }
@@ -110,6 +200,15 @@ const SimplePostGeneratorPage = () => {
       toast.success('Post in Zwischenablage kopiert!')
     }
   }
+
+  // Cleanup polling on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval)
+      }
+    }
+  }, [pollingInterval])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -140,6 +239,16 @@ const SimplePostGeneratorPage = () => {
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {loading && progress && (
+                <Alert>
+                  <Clock className="h-4 w-4" />
+                  <AlertDescription className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {progress}
+                  </AlertDescription>
                 </Alert>
               )}
 
@@ -208,7 +317,7 @@ const SimplePostGeneratorPage = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generiere Post...
+                    {progress || 'Generiere Post...'}
                   </>
                 ) : (
                   <>
