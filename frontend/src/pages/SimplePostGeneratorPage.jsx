@@ -44,7 +44,7 @@ const SimplePostGeneratorPage = () => {
 
   const pollJobStatus = async (jobId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/status/${jobId}`)
+      const response = await fetch(`${API_BASE_URL}/api/async/status/${jobId}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -91,7 +91,7 @@ const SimplePostGeneratorPage = () => {
       console.log('Request body:', JSON.stringify(formData, null, 2))
 
       // Try async API first
-      const response = await fetch(`${API_BASE_URL}/api/posts/generate-async`, {
+      const response = await fetch(`${API_BASE_URL}/api/async/generate-async`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
