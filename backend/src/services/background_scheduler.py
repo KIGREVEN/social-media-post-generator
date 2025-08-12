@@ -2,7 +2,6 @@ import threading
 import time
 import logging
 from datetime import datetime, timedelta
-from src.services.scheduler_service import SchedulerService
 
 logger = logging.getLogger(__name__)
 
@@ -11,9 +10,16 @@ class BackgroundScheduler:
     
     def __init__(self, check_interval=60):  # Check every 60 seconds
         self.check_interval = check_interval
-        self.scheduler_service = SchedulerService()
+        self.scheduler_service = None  # Initialize later to avoid app context issues
         self.running = False
         self.thread = None
+    
+    def _get_scheduler_service(self):
+        """Get scheduler service, initializing if needed."""
+        if self.scheduler_service is None:
+            from src.services.scheduler_service import SchedulerService
+            self.scheduler_service = SchedulerService()
+        return self.scheduler_service
     
     def start(self):
         """Start the background scheduler."""
@@ -44,7 +50,8 @@ class BackgroundScheduler:
         while self.running:
             try:
                 # Process scheduled posts
-                results = self.scheduler_service.process_scheduled_posts()
+                scheduler_service = self._get_scheduler_service()
+                results = scheduler_service.process_scheduled_posts()
                 
                 if results['total_processed'] > 0:
                     logger.info(f"Processed {results['total_processed']} scheduled posts: "
@@ -89,8 +96,15 @@ class SimpleScheduler:
     """Simple in-memory scheduler that checks for posts to publish."""
     
     def __init__(self):
-        self.scheduler_service = SchedulerService()
+        self.scheduler_service = None  # Initialize later to avoid app context issues
         self.last_check = datetime.utcnow()
+    
+    def _get_scheduler_service(self):
+        """Get scheduler service, initializing if needed."""
+        if self.scheduler_service is None:
+            from src.services.scheduler_service import SchedulerService
+            self.scheduler_service = SchedulerService()
+        return self.scheduler_service
     
     def check_and_process(self):
         """Check for posts to publish and process them."""
@@ -104,7 +118,8 @@ class SimpleScheduler:
             self.last_check = current_time
             
             # Process scheduled posts
-            results = self.scheduler_service.process_scheduled_posts()
+            scheduler_service = self._get_scheduler_service()
+            results = scheduler_service.process_scheduled_posts()
             
             logger.info(f"Scheduler check at {current_time}: "
                        f"processed {results['total_processed']} posts, "

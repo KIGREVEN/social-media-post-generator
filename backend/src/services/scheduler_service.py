@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
 import pytz
-from src.models import db, ScheduledPost, Post
-from src.services.social_media_service import SocialMediaService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,6 +8,8 @@ class SchedulerService:
     """Service for managing scheduled posts."""
     
     def __init__(self):
+        # Import here to avoid circular imports and app context issues
+        from src.services.social_media_service import SocialMediaService
         self.social_media_service = SocialMediaService()
     
     def schedule_post(self, user_id, post_content, platform, scheduled_time, timezone='UTC', post_id=None):
@@ -28,6 +28,9 @@ class SchedulerService:
             ScheduledPost object or None if failed
         """
         try:
+            # Import here to avoid app context issues
+            from src.models import db, ScheduledPost
+            
             # Convert scheduled time to UTC if needed
             if timezone != 'UTC':
                 user_tz = pytz.timezone(timezone)
@@ -71,6 +74,9 @@ class SchedulerService:
             List of ScheduledPost objects
         """
         try:
+            # Import here to avoid app context issues
+            from src.models import ScheduledPost
+            
             query = ScheduledPost.query.filter_by(user_id=user_id)
             
             if status:
@@ -90,6 +96,9 @@ class SchedulerService:
             List of ScheduledPost objects ready for publishing
         """
         try:
+            # Import here to avoid app context issues
+            from src.models import ScheduledPost
+            
             current_time = datetime.utcnow()
             return ScheduledPost.query.filter(
                 ScheduledPost.status == 'scheduled',
@@ -111,6 +120,9 @@ class SchedulerService:
             Boolean indicating success
         """
         try:
+            # Import here to avoid app context issues
+            from src.models import db
+            
             logger.info(f"Publishing scheduled post {scheduled_post.id} to {scheduled_post.platform}")
             
             # Prepare post data for publishing
@@ -160,6 +172,9 @@ class SchedulerService:
             Boolean indicating success
         """
         try:
+            # Import here to avoid app context issues
+            from src.models import db, ScheduledPost
+            
             scheduled_post = ScheduledPost.query.filter_by(
                 id=scheduled_post_id,
                 user_id=user_id,
@@ -195,6 +210,9 @@ class SchedulerService:
             Boolean indicating success
         """
         try:
+            # Import here to avoid app context issues
+            from src.models import db, ScheduledPost
+            
             scheduled_post = ScheduledPost.query.filter_by(
                 id=scheduled_post_id,
                 user_id=user_id,
