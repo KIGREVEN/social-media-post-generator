@@ -365,25 +365,146 @@ class SocialMediaService:
         }
     
     # Posting methods
-    def _post_to_linkedin(self, social_account: SocialAccount, content: str, image_url: Optional[str] = None) -> Dict[str, Any]:
-        """Post content to LinkedIn using the modern API."""
+    def _upload_image_to_linkedin(self, social_account: SocialAccount, image_url: str) -> Dict[str, Any]:
+        """Upload an image to LinkedIn and return the media URN."""
         try:
-            # LinkedIn API v2 - Create a post
-            post_data = {
-                'author': f'urn:li:person:{social_account.account_id}',
-                'lifecycleState': 'PUBLISHED',
-                'specificContent': {
-                    'com.linkedin.ugc.ShareContent': {
-                        'shareCommentary': {
-                            'text': content
-                        },
-                        'shareMediaCategory': 'NONE'
-                    }
-                },
-                'visibility': {
-                    'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+            # Step 1: Register upload
+            register_data = {
+                "registerUploadRequest": {
+                    "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
+                    "owner": f"urn:li:person:{social_account.account_id}",
+                    "serviceRelationships": [
+                        {
+                            "relationshipType": "OWNER",
+                            "identifier": "urn:li:userGeneratedContent"
+                        }
+                    ]
                 }
             }
+            
+            headers = {
+                'Authorization': f'Bearer {social_account.access_token}',
+                'Content-Type': 'application/json',
+                'X-Restli-Protocol-Version': '2.0.0'
+            }
+            
+            # Register the upload
+            register_response = requests.post(
+                'https://api.linkedin.com/v2/assets?action=registerUpload',
+                json=register_data,
+                headers=headers
+            )
+            
+            if register_response.status_code != 200:
+                return {
+                    'success': False,
+                    'error': f'LinkedIn upload registration failed: {register_response.status_code} - {register_response.text}'
+                }
+            
+            register_result = register_response.json()
+            upload_url = register_result['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl']
+            asset_id = register_result['value']['asset']
+            
+            # Step 2: Download the image
+            image_response = requests.get(image_url)
+            if image_response.status_code != 200:
+                return {
+                    'success': False,
+                    'error': f'Failed to download image from {image_url}: {image_response.status_code}'
+                }
+            
+            # Step 3: Upload the image binary data
+            upload_headers = {
+                'Authorization': f'Bearer {social_account.access_token}',
+            }
+            
+            upload_response = requests.put(
+                upload_url,
+                data=image_response.content,
+                headers=upload_headers
+            )
+            
+            if upload_response.status_code not in [200, 201]:
+                return {
+                    'success': False,
+                    'error': f'LinkedIn image upload failed: {upload_response.status_code} - {upload_response.text}'
+                }
+            
+            return {
+                'success': True,
+                'asset_id': asset_id,
+                'upload_url': upload_url
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'LinkedIn image upload exception: {str(e)}'
+            }
+
+    def _post_to_linkedin(self, social_account: SocialAccount, content: str, image_url: Optional[str] = None) -> Dict[str, Any]:
+        """Post content to LinkedIn using the modern API with optional image."""
+        try:
+            # Handle image upload if provided
+            media_asset = None
+            if image_url:
+                upload_result = self._upload_image_to_linkedin(social_account, image_url)
+                if not upload_result.get('success'):
+                    return {
+                        'success': False,
+                        'platform': 'linkedin',
+                        'error': f"Image upload failed: {upload_result.get('error')}",
+                        'upload_details': upload_result
+                    }
+                media_asset = upload_result['asset_id']
+            
+            # LinkedIn API v2 - Create a post
+            if media_asset:
+                # Post with image
+                post_data = {
+                    'author': f'urn:li:person:{social_account.account_id}',
+                    'lifecycleState': 'PUBLISHED',
+                    'specificContent': {
+                        'com.linkedin.ugc.ShareContent': {
+                            'shareCommentary': {
+                                'text': content
+                            },
+                            'shareMediaCategory': 'IMAGE',
+                            'media': [
+                                {
+                                    'status': 'READY',
+                                    'description': {
+                                        'text': 'Generated image'
+                                    },
+                                    'media': media_asset,
+                                    'title': {
+                                        'text': 'Social Media Post Image'
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    'visibility': {
+                        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+                    }
+                }
+            else:
+                # Text-only post
+                post_data = {
+                    'author': f'urn:li:person:{social_account.account_id}',
+                    'lifecycleState': 'PUBLISHED',
+                    'specificContent': {
+                        'com.linkedin.ugc.ShareContent': {
+                            'shareCommentary': {
+                                'text': content
+                            },
+                            'shareMediaCategory': 'NONE'
+                        }
+                    },
+                    'visibility': {
+                        'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
+                    }
+                }
             
             headers = {
                 'Authorization': f'Bearer {social_account.access_token}',
@@ -407,7 +528,9 @@ class SocialMediaService:
                     'success': True,
                     'platform': 'linkedin',
                     'post_id': post_id,
-                    'message': 'Post successfully published to LinkedIn',
+                    'message': f'Post successfully published to LinkedIn{"" if not image_url else " with image"}',
+                    'has_image': bool(image_url),
+                    'media_asset': media_asset,
                     'response': response_data
                 }
             else:
@@ -420,7 +543,9 @@ class SocialMediaService:
                     'platform': 'linkedin',
                     'error': error_msg,
                     'status_code': response.status_code,
-                    'response': response.text
+                    'response': response.text,
+                    'has_image': bool(image_url),
+                    'media_asset': media_asset
                 }
                 
         except Exception as e:
@@ -431,7 +556,8 @@ class SocialMediaService:
                 'success': False,
                 'platform': 'linkedin',
                 'error': error_msg,
-                'exception': str(e)
+                'exception': str(e),
+                'has_image': bool(image_url)
             }
     
     def _post_to_facebook(self, social_account: SocialAccount, content: str, image_url: Optional[str] = None) -> Dict[str, Any]:

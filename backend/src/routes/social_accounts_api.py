@@ -233,15 +233,18 @@ def publish_to_social_media():
                 from src.services.social_media_service import SocialMediaService
                 social_service = SocialMediaService()
                 
-                # Call the appropriate posting method
+                # Get image URL if post has an image
+                image_url = post.generated_image_url if post.generated_image_url else None
+                
+                # Call the appropriate posting method with image support
                 if platform == 'linkedin':
-                    result = social_service._post_to_linkedin(social_account, post.content)
+                    result = social_service._post_to_linkedin(social_account, post.content, image_url)
                 elif platform == 'facebook':
-                    result = social_service._post_to_facebook(social_account, post.content)
+                    result = social_service._post_to_facebook(social_account, post.content, image_url)
                 elif platform == 'twitter':
-                    result = social_service._post_to_twitter(social_account, post.content)
+                    result = social_service._post_to_twitter(social_account, post.content, image_url)
                 elif platform == 'instagram':
-                    result = social_service._post_to_instagram(social_account, post.content)
+                    result = social_service._post_to_instagram(social_account, post.content, image_url)
                 
                 if result.get('success'):
                     # Mark post as published for this platform
@@ -253,14 +256,17 @@ def publish_to_social_media():
                         'platform': platform,
                         'success': True,
                         'message': result.get('message', f'Successfully published to {platform.title()}'),
-                        'post_id': result.get('post_id', f'unknown_{platform}_post_id')
+                        'post_id': result.get('post_id', f'unknown_{platform}_post_id'),
+                        'has_image': result.get('has_image', False),
+                        'media_asset': result.get('media_asset')
                     })
                 else:
                     results.append({
                         'platform': platform,
                         'success': False,
                         'error': result.get('error', f'Failed to publish to {platform.title()}'),
-                        'details': result
+                        'details': result,
+                        'has_image': result.get('has_image', False)
                     })
                 
             except Exception as e:
