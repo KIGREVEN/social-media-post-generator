@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import PostGeneratorPage from './pages/PostGeneratorPage'
 import SimplePostGeneratorPage from './pages/SimplePostGeneratorPage'
+import SimplePostGeneratorPageAsync from './pages/SimplePostGeneratorPageAsync'
 import PostsPage from './pages/PostsPage'
 import SocialAccountsPage from './pages/SocialAccountsPage'
 import AdminPageFinalWorking from './pages/AdminPageFinalWorking'
@@ -24,6 +25,7 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/simple-generator" element={<SimplePostGeneratorPage />} />
+              <Route path="/async-generator" element={<SimplePostGeneratorPageAsync />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route 
