@@ -1,5 +1,6 @@
-import requests
 import json
+import base64
+import requests
 from flask import current_app, url_for
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
@@ -415,17 +416,35 @@ class SocialMediaService:
             print(f"LinkedIn: Upload URL received: {upload_url}")
             print(f"LinkedIn: Asset ID: {asset_id}")
             
-            # Step 2: Download the image
-            print(f"LinkedIn: Downloading image from: {image_url}")
-            image_response = requests.get(image_url)
-            if image_response.status_code != 200:
-                return {
-                    'success': False,
-                    'error': f'Failed to download image from {image_url}: {image_response.status_code}',
-                    'step': 'download_image'
-                }
+            # Step 2: Get image data (handle both data URLs and HTTP URLs)
+            print(f"LinkedIn: Processing image from: {image_url[:100]}...")
             
-            print(f"LinkedIn: Image downloaded, size: {len(image_response.content)} bytes")
+            if image_url.startswith('data:image/'):
+                # Handle data URL (base64 encoded image)
+                print("LinkedIn: Detected data URL, extracting base64 data")
+                try:
+                    # Extract base64 data from data URL
+                    header, data = image_url.split(',', 1)
+                    image_data = base64.b64decode(data)
+                    print(f"LinkedIn: Base64 decoded, size: {len(image_data)} bytes")
+                except Exception as e:
+                    return {
+                        'success': False,
+                        'error': f'Failed to decode base64 image data: {str(e)}',
+                        'step': 'decode_base64'
+                    }
+            else:
+                # Handle regular HTTP/HTTPS URL
+                print("LinkedIn: Detected HTTP URL, downloading image")
+                image_response = requests.get(image_url)
+                if image_response.status_code != 200:
+                    return {
+                        'success': False,
+                        'error': f'Failed to download image from {image_url}: {image_response.status_code}',
+                        'step': 'download_image'
+                    }
+                image_data = image_response.content
+                print(f"LinkedIn: Image downloaded, size: {len(image_data)} bytes")
             
             # Step 3: Upload the image binary data using PUT (as per official documentation)
             # The documentation shows curl -i --upload-file which translates to PUT with binary data
@@ -439,7 +458,7 @@ class SocialMediaService:
             # Use PUT instead of POST - this is the correct method per LinkedIn documentation
             upload_response = requests.put(
                 upload_url,
-                data=image_response.content,  # Raw binary data
+                data=image_data,  # Use the processed image data (works for both data URLs and HTTP URLs)
                 headers=upload_headers
             )
             
