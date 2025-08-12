@@ -86,15 +86,16 @@ def generate_post_async(job_id, data, app):
             
             new_post = Post(
                 user_id=current_user_id,
+                title=post_theme[:200],  # Truncate to fit title field
                 content=post_content,
-                image_url=generated_image_url,
+                generated_image_url=generated_image_url,
                 platform=platform,
                 profile_url=profile_url,
                 post_theme=post_theme
             )
             
             db.session.add(new_post)
-            post_usage.increment_usage()
+            post_usage.increment_generated()
             db.session.commit()
             
             # Success
@@ -104,7 +105,7 @@ def generate_post_async(job_id, data, app):
                     'post': {
                         'id': new_post.id,
                         'content': post_content,
-                        'image_url': generated_image_url,
+                        'generated_image_url': generated_image_url,
                         'platform': platform,
                         'created_at': new_post.created_at.isoformat()
                     }

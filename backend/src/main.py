@@ -112,6 +112,7 @@ def create_app(config_name=None):
     from src.routes.auth import auth_bp
     from src.routes.posts import posts_bp
     from src.routes.posts_async import posts_async_bp
+    from src.routes.posts_library import posts_library_bp
     from src.routes.social import social_bp
     from src.routes.admin import admin_bp
     from src.routes.super_admin import super_admin_bp
@@ -123,6 +124,7 @@ def create_app(config_name=None):
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
     app.register_blueprint(posts_async_bp, url_prefix='/api/async')
+    app.register_blueprint(posts_library_bp, url_prefix='/api/library')
     app.register_blueprint(social_bp, url_prefix='/api/social')
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
     app.register_blueprint(super_admin_bp, url_prefix='/api/super-admin')
