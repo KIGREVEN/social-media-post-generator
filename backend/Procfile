@@ -1,2 +1,2 @@
-web: gunicorn --bind 0.0.0.0:$PORT src.main:app
+web: gunicorn --bind 0.0.0.0:$PORT --timeout 300 --keep-alive 300 --worker-connections 1000 src.main:app
 
