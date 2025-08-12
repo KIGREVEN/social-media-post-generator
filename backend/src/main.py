@@ -179,7 +179,6 @@ def create_app(config_name=None):
     from src.routes.migration import migration_bp
     from src.routes.subscription_api import subscription_api_bp
     from src.routes.planner import planner_bp
-    from src.routes.scheduler import scheduler_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
@@ -194,12 +193,106 @@ def create_app(config_name=None):
     app.register_blueprint(migration_bp, url_prefix='/api/migration')
     app.register_blueprint(subscription_api_bp, url_prefix='/api/subscription')
     app.register_blueprint(planner_bp, url_prefix='/api/planner')
-    app.register_blueprint(scheduler_bp, url_prefix='/api/scheduler')
     
     # Health check endpoint
     @app.route('/health')
     def health_check():
         return jsonify({'status': 'healthy', 'message': 'Social Media Post Generator API is running'}), 200
+    
+    # Simple scheduler endpoints with lazy loading
+    @app.route('/api/scheduler/scheduled', methods=['GET'])
+    def get_scheduled_posts():
+        """Get scheduled posts with lazy service loading."""
+        try:
+            from src.services.scheduler_service import SchedulerService
+            from src.services.background_scheduler import get_simple_scheduler
+            
+            # Auto-check for posts to publish
+            simple_scheduler = get_simple_scheduler()
+            simple_scheduler.check_and_process()
+            
+            # Get scheduled posts
+            scheduler_service = SchedulerService()
+            user_id = request.args.get('user_id', 1, type=int)
+            status = request.args.get('status')
+            
+            scheduled_posts = scheduler_service.get_scheduled_posts(user_id, status)
+            
+            return jsonify({
+                'scheduled_posts': [post.to_dict() for post in scheduled_posts]
+            }), 200
+            
+        except Exception as e:
+            return jsonify({'error': f'Error getting scheduled posts: {str(e)}'}), 500
+    
+    @app.route('/api/scheduler/schedule', methods=['POST'])
+    def schedule_post():
+        """Schedule a post with lazy service loading."""
+        try:
+            from src.services.scheduler_service import SchedulerService
+            from datetime import datetime
+            import pytz
+            
+            data = request.get_json()
+            
+            # Validate required fields
+            required_fields = ['content', 'platform', 'scheduled_date', 'scheduled_time']
+            for field in required_fields:
+                if field not in data:
+                    return jsonify({'error': f'Missing required field: {field}'}), 400
+            
+            # Parse scheduled datetime
+            try:
+                scheduled_date = data['scheduled_date']
+                scheduled_time = data['scheduled_time']
+                timezone = data.get('timezone', 'UTC')
+                
+                datetime_str = f"{scheduled_date} {scheduled_time}"
+                scheduled_datetime = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
+                
+                # Validate future time
+                current_time = datetime.utcnow()
+                if timezone != 'UTC':
+                    user_tz = pytz.timezone(timezone)
+                    current_time = pytz.UTC.localize(current_time).astimezone(user_tz).replace(tzinfo=None)
+                
+                if scheduled_datetime <= current_time:
+                    return jsonify({'error': 'Scheduled time must be in the future'}), 400
+                    
+            except ValueError as e:
+                return jsonify({'error': f'Invalid date/time format: {str(e)}'}), 400
+            except pytz.exceptions.UnknownTimeZoneError:
+                return jsonify({'error': 'Invalid timezone'}), 400
+            
+            # Schedule the post
+            scheduler_service = SchedulerService()
+            user_id = data.get('user_id', 1)
+            
+            post_content = {
+                'title': data.get('title', ''),
+                'content': data['content'],
+                'image_url': data.get('image_url', '')
+            }
+            
+            scheduled_post = scheduler_service.schedule_post(
+                user_id=user_id,
+                post_content=post_content,
+                platform=data['platform'],
+                scheduled_time=scheduled_datetime,
+                timezone=timezone,
+                post_id=data.get('post_id')
+            )
+            
+            if scheduled_post:
+                return jsonify({
+                    'message': 'Post scheduled successfully',
+                    'scheduled_post': scheduled_post.to_dict()
+                }), 201
+            else:
+                return jsonify({'error': 'Failed to schedule post'}), 500
+                
+        except Exception as e:
+            return jsonify({'error': f'Error scheduling post: {str(e)}'}), 500
     
     # Run database migration on first request
     migration_done = False
