@@ -161,33 +161,67 @@ class OpenAIService:
             # Final fallback to placeholder
             return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
     
-    def create_image_prompt(self, post_theme: str, company_info: str = "") -> str:
+    def create_image_prompt(self, post_content: str, platform: str = "linkedin") -> str:
         """
-        Create a professional image prompt optimized for GPT-Image-1.
+        Create a platform-specific image prompt based on the generated post content.
         
         Args:
-            post_theme: Main theme of the post
-            company_info: Information about the company
+            post_content: The generated post content to base the image on
+            platform: Target platform (linkedin, facebook, twitter, instagram)
             
         Returns:
-            Professional image prompt optimized for GPT-Image-1
-        """
-        base_prompt = f"""
-        Create a professional business image for social media about: {post_theme}
-        
-        Style: Modern, clean, professional business aesthetic with high visual impact
-        Colors: Professional color palette featuring blues, whites, and subtle accent colors
-        Composition: Well-balanced, visually appealing layout suitable for social media
-        Quality: High-resolution, crisp, and professional-grade imagery
-        Elements: Business-appropriate visual elements, no text overlays, focus on visual storytelling
-        
-        {f"Company context: {company_info}" if company_info else ""}
-        
-        The image should be optimized for GPT-Image-1's capabilities and convey professionalism, trust, and expertise.
-        Perfect for LinkedIn, Facebook, and other professional social media platforms.
+            Platform-specific image prompt optimized for GPT-Image-1
         """
         
-        return base_prompt.strip()
+        # Platform-specific descriptions
+        platform_descriptions = {
+            "linkedin": "ein modernes, professionelles LinkedIn-Bild",
+            "facebook": "ein ansprechendes, professionelles Facebook-Bild", 
+            "instagram": "ein visuell ansprechendes, modernes Instagram-Bild",
+            "twitter": "ein kompaktes, aussagekräftiges Twitter-Bild"
+        }
+        
+        platform_desc = platform_descriptions.get(platform, platform_descriptions["linkedin"])
+        
+        # Create the prompt based on user's template
+        prompt = f"""
+Erstelle {platform_desc}. Das Bild soll zu folgendem {platform.title()}-Post passen:
+
+---
+{post_content}
+---
+
+Berücksichtige dabei:
+- Die zentrale Botschaft des Posts
+- Visuelle Symbole, die dazu passen (z. B. Pfeile, Wachstumskurven, Zielscheiben, Menschen, Technik)
+- Den Stil: seriös, modern, aufgeräumt, für Business-Posts geeignet
+- Der Titel des Produkts oder Angebots muss deutlich im Bild sein, dieser darf aber auf keinen Fall in "" stehen.
+- Die Texte in dem Bild sollen auf Deutsch sein außer es sind Produktnamen
+- Design: professional photography, ultra-realistic, 4K UHD resolution, shallow depth of field, soft natural lighting, high dynamic range, sharp focus, bokeh background, cinematic composition
+
+Das Bild soll die Kernaussage des Posts visuell unterstützen und professionell wirken.
+        """
+        
+        return prompt.strip()
+    
+    def get_platform_image_size(self, platform: str) -> str:
+        """
+        Get the optimal image size for each platform.
+        
+        Args:
+            platform: Target platform
+            
+        Returns:
+            Image size string for the platform
+        """
+        platform_sizes = {
+            "linkedin": "1024x1024",    # Square format works well for LinkedIn
+            "facebook": "1024x1024",    # Square format for Facebook posts
+            "instagram": "1024x1536",   # Portrait format (9:16 ratio)
+            "twitter": "1024x1024"      # Square format for Twitter
+        }
+        
+        return platform_sizes.get(platform, "1024x1024")
     
     def _analyze_website(self, url: str) -> str:
         """

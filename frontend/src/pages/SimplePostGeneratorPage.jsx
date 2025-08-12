@@ -17,7 +17,7 @@ const SimplePostGeneratorPage = () => {
     post_theme: '',
     additional_details: '',
     platform: 'linkedin',
-    generate_image: false
+    generate_image: true  // Enable image generation by default
   })
   
   const [generatedPost, setGeneratedPost] = useState(null)
@@ -226,6 +226,22 @@ const SimplePostGeneratorPage = () => {
                       {generatedPost.content}
                     </div>
                   </div>
+                  
+                  {/* Display generated image if available */}
+                  {generatedPost.generated_image_url && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h3 className="font-semibold mb-2">Generiertes Bild:</h3>
+                      <img 
+                        src={generatedPost.generated_image_url} 
+                        alt="Generiertes Bild für den Post"
+                        className="w-full max-w-md mx-auto rounded-lg shadow-md"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          console.log('Image failed to load:', generatedPost.generated_image_url);
+                        }}
+                      />
+                    </div>
+                  )}
                   
                   <div className="flex gap-2">
                     <Button onClick={handleCopyToClipboard} variant="outline" className="flex-1">

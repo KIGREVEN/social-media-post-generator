@@ -80,13 +80,20 @@ def generate_post():
         generated_image_url = None
         if generate_image:
             try:
-                # Create image prompt based on post theme
+                # Create image prompt based on the GENERATED POST CONTENT (not just theme)
                 image_prompt = openai_service.create_image_prompt(
-                    post_theme=post_theme,
-                    company_info=f"Website: {profile_url}"
+                    post_content=post_content,  # Use the actual generated post content
+                    platform=platform
                 )
                 
-                generated_image_url = openai_service.generate_image(image_prompt)
+                # Get platform-specific image size
+                image_size = openai_service.get_platform_image_size(platform)
+                
+                # Generate image with platform-specific size
+                generated_image_url = openai_service.generate_image(
+                    prompt=image_prompt,
+                    size=image_size
+                )
                 
             except Exception as e:
                 # Don't fail the entire request if image generation fails
