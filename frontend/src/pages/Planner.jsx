@@ -151,6 +151,9 @@ const Planner = () => {
           if (response.ok) {
             const postData = await response.json();
             createdPosts.push(postData);
+          } else {
+            const errorData = await response.text();
+            console.error(`API Error for idea ${selectedIdea.id}:`, response.status, errorData);
           }
         } catch (err) {
           console.error(`Error creating post for idea ${selectedIdea.id}:`, err);
@@ -164,7 +167,7 @@ const Planner = () => {
         // Reset selections
         setSelectedIdeas(new Set());
       } else {
-        setError('Fehler beim Erstellen der Beiträge. Bitte versuchen Sie es erneut.');
+        setError('Fehler beim Erstellen der Beiträge. Bitte versuchen Sie es erneut. Prüfen Sie die Browser-Konsole für Details.');
       }
 
     } catch (err) {
