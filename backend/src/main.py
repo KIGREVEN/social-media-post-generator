@@ -161,21 +161,30 @@ def create_app(config_name=None):
     app.register_blueprint(subscription_api_bp, url_prefix='/api/subscription')
     app.register_blueprint(planner_bp, url_prefix='/api/planner')
     
-    # Create database tables
-    with app.app_context():
-        db.create_all()
-        # Run database migration for subscription field
-        print("🚀 Starting database migration on app startup...")
-        migration_success = run_database_migration()
-        if migration_success:
-            print("✅ Database migration completed successfully on startup")
-        else:
-            print("❌ Database migration failed on startup")
-    
     # Health check endpoint
     @app.route('/health')
     def health_check():
         return jsonify({'status': 'healthy', 'message': 'Social Media Post Generator API is running'}), 200
+    
+    # Initialize database on first request (Flask 2.2+ compatible)
+    def initialize_database():
+        if not hasattr(app, '_database_initialized'):
+            with app.app_context():
+                db.create_all()
+                # Run database migration for subscription field
+                print("🚀 Starting database migration on app startup...")
+                migration_success = run_database_migration()
+                if migration_success:
+                    print("✅ Database migration completed successfully on startup")
+                else:
+                    print("❌ Database migration failed on startup")
+                app._database_initialized = True
+    
+    # Register the initialization function to run on first request
+    @app.before_request
+    def ensure_database_initialized():
+        if not hasattr(app, '_database_initialized'):
+            initialize_database()
     
     return app
 
