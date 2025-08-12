@@ -2,12 +2,22 @@ import requests
 from flask import current_app
 from typing import Optional, Dict, Any
 import json
+import os
 
 class OpenAIService:
     """Service for OpenAI API integration using direct HTTP calls."""
     
     def __init__(self):
-        self.api_key = current_app.config.get('OPENAI_API_KEY')
+        # Get API key from environment or current_app config
+        self.api_key = os.environ.get('OPENAI_API_KEY')
+        if not self.api_key:
+            try:
+                from flask import has_app_context
+                if has_app_context():
+                    self.api_key = current_app.config.get('OPENAI_API_KEY')
+            except:
+                pass
+        
         if not self.api_key:
             raise ValueError("OpenAI API key not configured")
         
