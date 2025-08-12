@@ -6,10 +6,10 @@ class Post(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=True)
+    title = db.Column(db.Text, nullable=True)
     content = db.Column(db.Text, nullable=False)
     profile_url = db.Column(db.Text, nullable=True)
-    post_theme = db.Column(db.String(200), nullable=True)
+    post_theme = db.Column(db.Text, nullable=True)
     additional_details = db.Column(db.Text, nullable=True)
     generated_image_url = db.Column(db.Text, nullable=True)
     platform = db.Column(db.String(20), nullable=True)  # 'linkedin', 'facebook', 'twitter', 'instagram'

@@ -68,11 +68,36 @@ def run_database_migration():
                 except Exception as e:
                     print(f"⚠️  Could not add subscription column: {e}")
                     print("   This is normal if the column already exists")
-                    return False
             else:
                 print("✅ Subscription column already exists")
         else:
             print("⚠️  Users table will be created on first user registration")
+        
+        # Check and update posts table column types
+        if 'posts' in inspector.get_table_names():
+            print("🔄 Checking posts table column types...")
+            try:
+                with db.engine.connect() as conn:
+                    # Convert title from VARCHAR(200) to TEXT
+                    conn.execute(text("""
+                        ALTER TABLE posts 
+                        ALTER COLUMN title TYPE TEXT
+                    """))
+                    
+                    # Convert post_theme from VARCHAR(200) to TEXT  
+                    conn.execute(text("""
+                        ALTER TABLE posts 
+                        ALTER COLUMN post_theme TYPE TEXT
+                    """))
+                    
+                    conn.commit()
+                    print("✅ Updated posts table column types to TEXT")
+                    
+            except Exception as e:
+                print(f"⚠️  Could not update posts table columns: {e}")
+                print("   This is normal if columns are already TEXT type")
+        else:
+            print("⚠️  Posts table will be created on first post creation")
         
         print("✅ Database migration completed successfully")
         return True
@@ -165,6 +190,17 @@ def create_app(config_name=None):
     @app.route('/health')
     def health_check():
         return jsonify({'status': 'healthy', 'message': 'Social Media Post Generator API is running'}), 200
+    
+    # Run database migration on first request
+    migration_done = False
+    
+    @app.before_request
+    def run_migration_once():
+        nonlocal migration_done
+        if not migration_done:
+            with app.app_context():
+                run_database_migration()
+                migration_done = True
     
     return app
 
