@@ -104,7 +104,7 @@ class OpenAIService:
                 self.images_url, 
                 headers=self.headers, 
                 json=payload,
-                timeout=60  # 60 second timeout for image generation
+                timeout=180  # 3 minutes timeout for GPT-Image-1 generation
             )
             
             print(f"GPT-Image-1 Response Status: {response.status_code}")
