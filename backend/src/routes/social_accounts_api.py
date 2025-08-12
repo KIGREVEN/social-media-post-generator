@@ -55,7 +55,7 @@ def get_user_social_accounts():
 
 @social_accounts_api_bp.route('/connect/<platform>', methods=['POST'])
 def connect_social_account(platform):
-    """Simulate connecting a social media account (for demo purposes)."""
+    """Initiate OAuth flow for connecting a social media account."""
     try:
         # Verwende einen Standard-User für alle Requests (vereinfacht)
         user = User.query.filter_by(username='admin').first()
@@ -67,28 +67,43 @@ def connect_social_account(platform):
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Unsupported platform'}), 400
         
-        # Check if account already exists
+        # Check if user already has this platform connected
         existing_account = SocialAccount.query.filter_by(
-            user_id=current_user_id, platform=platform
+            user_id=current_user_id, platform=platform, is_active=True
         ).first()
         
         if existing_account:
-            # Reactivate existing account
-            existing_account.is_active = True
-            existing_account.updated_at = datetime.utcnow()
-            db.session.commit()
-            
             return jsonify({
-                'message': f'{platform.title()} account reconnected successfully',
+                'error': f'{platform.title()} account already connected',
                 'account': existing_account.to_dict()
-            }), 200
+            }), 409
         
-        # Create new social account (demo data)
+        # For LinkedIn, use real OAuth flow
+        if platform == 'linkedin':
+            from src.services.social_media_service import SocialMediaService
+            from flask import url_for
+            
+            try:
+                social_service = SocialMediaService()
+                
+                # Build redirect URI for LinkedIn
+                redirect_uri = url_for('social.oauth_callback', platform=platform, _external=True)
+                
+                # Generate real OAuth URL
+                oauth_url = social_service.get_oauth_url(platform, current_user_id, redirect_uri)
+                
+                return jsonify({
+                    'oauth_url': oauth_url,
+                    'platform': platform,
+                    'message': f'Redirect to {platform.title()} for authorization',
+                    'redirect': True
+                }), 200
+                
+            except Exception as e:
+                return jsonify({'error': f'Failed to generate OAuth URL: {str(e)}'}), 500
+        
+        # For other platforms, use demo data (as before)
         demo_data = {
-            'linkedin': {
-                'account_id': 'demo_linkedin_123',
-                'account_name': 'Demo LinkedIn User'
-            },
             'facebook': {
                 'account_id': 'demo_facebook_456',
                 'account_name': 'Demo Facebook User'
@@ -119,7 +134,8 @@ def connect_social_account(platform):
         
         return jsonify({
             'message': f'{platform.title()} account connected successfully',
-            'account': new_account.to_dict()
+            'account': new_account.to_dict(),
+            'redirect': False
         }), 201
         
     except Exception as e:

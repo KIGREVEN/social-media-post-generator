@@ -1,5 +1,6 @@
 import os
 import sys
+import os
 # DON'T CHANGE THIS !!!
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -107,6 +108,10 @@ def create_app(config_name=None):
             if request.method == 'OPTIONS':
                 return
             return redirect(request.url.replace('http://', 'https://'), code=301)
+    
+    # Configure LinkedIn API Keys
+    app.config['LINKEDIN_CLIENT_ID'] = '86ulp9wjdtcpzv'
+    app.config['LINKEDIN_CLIENT_SECRET'] = 'WPL_AP1.aV4gE6gZ5TAXvM2L.TOcuAw=='
     
     # Register blueprints
     from src.routes.auth import auth_bp

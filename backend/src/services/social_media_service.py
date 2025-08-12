@@ -154,7 +154,7 @@ class SocialMediaService:
         
         # Get user profile information
         profile_response = requests.get(
-            'https://api.linkedin.com/v2/people/~:(id,firstName,lastName)',
+            'https://api.linkedin.com/v2/people/~',
             headers={'Authorization': f'Bearer {access_token}'}
         )
         
@@ -162,6 +162,14 @@ class SocialMediaService:
             raise Exception(f"LinkedIn profile fetch failed: {profile_response.text}")
         
         profile_data = profile_response.json()
+        
+        # Extract name information more robustly
+        first_name = profile_data.get('localizedFirstName', '')
+        last_name = profile_data.get('localizedLastName', '')
+        account_name = f"{first_name} {last_name}".strip()
+        
+        if not account_name:
+            account_name = f"LinkedIn User {profile_data['id'][:8]}"
         
         # Save or update social account
         social_account = SocialAccount.query.filter_by(
@@ -172,7 +180,7 @@ class SocialMediaService:
             social_account = SocialAccount(user_id=user_id, platform='linkedin')
         
         social_account.account_id = profile_data['id']
-        social_account.account_name = f"{profile_data['firstName']['localized']['en_US']} {profile_data['lastName']['localized']['en_US']}"
+        social_account.account_name = account_name
         social_account.access_token = access_token
         social_account.expires_at = datetime.utcnow() + timedelta(seconds=expires_in)
         social_account.is_active = True

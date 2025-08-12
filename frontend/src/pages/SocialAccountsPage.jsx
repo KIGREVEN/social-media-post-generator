@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -108,18 +108,33 @@ const SocialAccountsPage = () => {
       setConnecting(prev => ({ ...prev, [platform]: true }))
       
       const response = await fetch(`${API_BASE_URL}/api/social-accounts/connect/${platform}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
       
       const data = await response.json()
 
       if (response.ok) {
-        toast.success(data.message)
-        await fetchData()
+        if (data.redirect && data.oauth_url) {
+          // For LinkedIn, redirect to OAuth URL
+          toast.success(`Weiterleitung zu ${platform.charAt(0).toUpperCase() + platform.slice(1)}...`)
+          window.location.href = data.oauth_url
+        } else {
+          // For other platforms, handle demo connection
+          toast.success(data.message)
+          await fetchData()
+        }
       } else {
-        toast.error(data.error || 'Fehler beim Verbinden')
+        if (response.status === 409) {
+          toast.warning(data.error)
+        } else {
+          toast.error(data.error || 'Fehler beim Verbinden')
+        }
       }
     } catch (error) {
+      console.error('Connection error:', error)
       toast.error('Verbindungsfehler')
     } finally {
       setConnecting(prev => ({ ...prev, [platform]: false }))
