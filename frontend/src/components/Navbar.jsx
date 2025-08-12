@@ -16,7 +16,8 @@ import {
   PlusCircle, 
   FileText, 
   Share2,
-  Shield
+  Shield,
+  Lightbulb
 } from 'lucide-react'
 
 const Navbar = () => {
@@ -51,6 +52,12 @@ const Navbar = () => {
                   <Link to="/dashboard">
                     <Button variant="ghost" size="sm">
                       Dashboard
+                    </Button>
+                  </Link>
+                  <Link to="/planner">
+                    <Button variant="ghost" size="sm">
+                      <Lightbulb className="w-4 h-4 mr-2" />
+                      Content-Planner
                     </Button>
                   </Link>
                   <Link to="/generate">
@@ -108,6 +115,12 @@ const Navbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/dashboard" className="w-full">
                           Dashboard
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/planner" className="w-full">
+                          <Lightbulb className="w-4 h-4 mr-2" />
+                          Content-Planner
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

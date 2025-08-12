@@ -145,6 +145,7 @@ def create_app(config_name=None):
     from src.routes.debug_admin_safe import debug_admin_safe_bp
     from src.routes.migration import migration_bp
     from src.routes.subscription_api import subscription_api_bp
+    from src.routes.planner import planner_bp
     
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(posts_bp, url_prefix='/api/posts')
@@ -158,6 +159,7 @@ def create_app(config_name=None):
     app.register_blueprint(debug_admin_safe_bp, url_prefix='/api/debug-admin-safe')
     app.register_blueprint(migration_bp, url_prefix='/api/migration')
     app.register_blueprint(subscription_api_bp, url_prefix='/api/subscription')
+    app.register_blueprint(planner_bp, url_prefix='/api/planner')
     
     # Create database tables
     with app.app_context():

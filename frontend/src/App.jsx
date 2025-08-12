@@ -11,6 +11,7 @@ import SimplePostGeneratorPage from './pages/SimplePostGeneratorPage'
 import SimplePostGeneratorPageAsync from './pages/SimplePostGeneratorPageAsync'
 import PostsPage from './pages/PostsPage'
 import SocialAccountsPage from './pages/SocialAccountsPage'
+import Planner from './pages/Planner'
 import AdminPageFinalWorking from './pages/AdminPageFinalWorking'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
@@ -57,6 +58,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SocialAccountsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/planner" 
+                element={
+                  <ProtectedRoute>
+                    <Planner />
                   </ProtectedRoute>
                 } 
               />
