@@ -86,8 +86,8 @@ def connect_social_account(platform):
             try:
                 social_service = SocialMediaService()
                 
-                # Build redirect URI for LinkedIn
-                redirect_uri = url_for('social.oauth_callback', platform=platform, _external=True)
+                # Build redirect URI for LinkedIn with HTTPS
+                redirect_uri = url_for('social.oauth_callback', platform=platform, _external=True, _scheme='https')
                 
                 # Generate real OAuth URL
                 oauth_url = social_service.get_oauth_url(platform, current_user_id, redirect_uri)

@@ -56,7 +56,7 @@ def connect_account(platform):
             social_service = SocialMediaService()
             
             # Build redirect URI
-            redirect_uri = url_for('social.oauth_callback', platform=platform, _external=True)
+            redirect_uri = url_for('social.oauth_callback', platform=platform, _external=True, _scheme='https')
             
             oauth_url = social_service.get_oauth_url(platform, current_user_id, redirect_uri)
             
@@ -99,7 +99,7 @@ def oauth_callback(platform):
             social_service = SocialMediaService()
             
             # Build redirect URI
-            redirect_uri = url_for('social.oauth_callback', platform=platform, _external=True)
+            redirect_uri = url_for('social.oauth_callback', platform=platform, _external=True, _scheme='https')
             
             # Handle OAuth callback
             result = social_service.handle_oauth_callback(platform, code, state, redirect_uri)
