@@ -71,7 +71,7 @@ class OpenAIService:
     
     def generate_image(self, prompt: str, size: str = "1024x1024") -> str:
         """
-        Generate an image using GPT-Image-1 via HTTP API calls.
+        Generate an image using GPT-Image-1 via direct HTTP API calls.
         
         Args:
             prompt: Description for image generation
@@ -81,58 +81,61 @@ class OpenAIService:
             Base64 encoded image data URL or placeholder
         """
         try:
-            # Build professional prompt for GPT-Image-1
-            professional_prompt = f"professional photography, ultra-realistic, 4K UHD resolution, shallow depth of field, soft natural lighting, high dynamic range, sharp focus, bokeh background, cinematic composition, wide aspect ratio, color graded like editorial magazine, taken with DSLR or mirrorless camera (Canon EOS R5 / Sony A7R IV), {prompt}"
-            
-            print(f"=== GPT-IMAGE-1 GENERATION DEBUG ===")
-            print(f"Original prompt: {prompt}")
-            print(f"Professional prompt: {professional_prompt}")
+            print(f"=== GPT-IMAGE-1 HTTP API GENERATION ===")
+            print(f"Prompt: {prompt}")
             print(f"Size: {size}")
-            print(f"=== END DEBUG ===")
             
             # Prepare the API request payload for GPT-Image-1
             payload = {
                 "model": "gpt-image-1",
-                "prompt": professional_prompt,
+                "prompt": prompt,
                 "size": size,
                 "quality": "high",
                 "n": 1,
-                "response_format": "b64_json"
+                "response_format": "b64_json"  # Request base64 format
             }
             
-            # Make the API request
-            response = requests.post(self.images_url, headers=self.headers, json=payload)
+            print(f"Payload: {payload}")
             
-            print(f"OpenAI API Response Status: {response.status_code}")
-            print(f"Response headers: {response.headers}")
+            # Make the HTTP API request to GPT-Image-1
+            response = requests.post(
+                self.images_url, 
+                headers=self.headers, 
+                json=payload,
+                timeout=60  # 60 second timeout for image generation
+            )
+            
+            print(f"GPT-Image-1 Response Status: {response.status_code}")
             
             if response.status_code == 200:
                 result = response.json()
-                print(f"Response data: {result}")
+                print(f"GPT-Image-1 Success! Response keys: {list(result.keys())}")
                 
-                # Process the base64 image response
+                # Process the base64 image response from GPT-Image-1
                 if 'data' in result and len(result['data']) > 0:
                     first_item = result['data'][0]
+                    print(f"Image data keys: {list(first_item.keys())}")
                     
                     # Handle base64 response from GPT-Image-1
                     if 'b64_json' in first_item and first_item['b64_json']:
-                        print("Processing base64 image from GPT-Image-1")
+                        print("✅ GPT-Image-1 base64 image generated successfully!")
                         return f"data:image/png;base64,{first_item['b64_json']}"
                     elif 'url' in first_item and first_item['url']:
-                        print(f"Found URL (fallback): {first_item['url']}")
+                        print(f"✅ GPT-Image-1 URL generated: {first_item['url']}")
                         return first_item['url']
                     else:
-                        print(f"No usable image data found. Available keys: {list(first_item.keys())}")
+                        print(f"❌ No usable image data. Available keys: {list(first_item.keys())}")
                         raise Exception("No usable image data returned from GPT-Image-1")
                 else:
-                    print("ERROR: Invalid response structure from OpenAI API")
-                    raise Exception("Invalid API response from GPT-Image-1")
+                    print("❌ Invalid response structure from GPT-Image-1")
+                    raise Exception("Invalid API response structure")
             else:
-                print(f"GPT-Image-1 API error: {response.status_code} - {response.text}")
+                error_text = response.text
+                print(f"❌ GPT-Image-1 API error: {response.status_code} - {error_text}")
                 
-                # Fallback to DALL-E 3 if GPT-Image-1 fails
+                # Try DALL-E 3 as fallback
+                print("🔄 Attempting DALL-E 3 fallback...")
                 try:
-                    print("Falling back to DALL-E 3...")
                     fallback_payload = {
                         "model": "dall-e-3",
                         "prompt": prompt,
@@ -142,22 +145,28 @@ class OpenAIService:
                         "style": "natural"
                     }
                     
-                    fallback_response = requests.post(self.images_url, headers=self.headers, json=fallback_payload)
+                    fallback_response = requests.post(
+                        self.images_url, 
+                        headers=self.headers, 
+                        json=fallback_payload,
+                        timeout=60
+                    )
                     
                     if fallback_response.status_code == 200:
                         fallback_result = fallback_response.json()
+                        print("✅ DALL-E 3 fallback successful!")
                         return fallback_result['data'][0]['url']
                     else:
-                        print(f"DALL-E 3 fallback error: {fallback_response.status_code} - {fallback_response.text}")
+                        print(f"❌ DALL-E 3 fallback failed: {fallback_response.status_code}")
                         raise Exception(f"DALL-E 3 fallback failed: {fallback_response.text}")
                         
                 except Exception as fallback_error:
-                    print(f"DALL-E 3 fallback error: {str(fallback_error)}")
+                    print(f"❌ DALL-E 3 fallback error: {str(fallback_error)}")
                     # Final fallback to placeholder
                     return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
             
         except Exception as e:
-            print(f"Image generation error: {str(e)}")
+            print(f"❌ Image generation error: {str(e)}")
             # Final fallback to placeholder
             return "https://via.placeholder.com/1024x1024/4A90E2/FFFFFF?text=Professional+Business+Image"
     
