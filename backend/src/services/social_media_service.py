@@ -122,7 +122,7 @@ class SocialMediaService:
             'client_id': self.linkedin_client_id,
             'redirect_uri': redirect_uri,
             'state': state,
-            'scope': 'r_liteprofile r_emailaddress w_member_social'
+            'scope': 'r_liteprofile w_member_social'
         }
         
         base_url = 'https://www.linkedin.com/oauth/v2/authorization'
