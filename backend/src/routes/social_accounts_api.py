@@ -228,25 +228,47 @@ def publish_to_social_media():
                 })
                 continue
             
-            # Simulate publishing (in production, use actual API calls)
+            # Use real API calls for publishing
             try:
-                # Mark post as published for this platform
-                post.is_posted = True
-                post.posted_at = datetime.utcnow()
-                post.platform = platform  # Update to last published platform
+                from src.services.social_media_service import SocialMediaService
+                social_service = SocialMediaService()
                 
-                results.append({
-                    'platform': platform,
-                    'success': True,
-                    'message': f'Successfully published to {platform.title()}',
-                    'post_id': f'demo_{platform}_post_id'
-                })
+                # Call the appropriate posting method
+                if platform == 'linkedin':
+                    result = social_service._post_to_linkedin(social_account, post.content)
+                elif platform == 'facebook':
+                    result = social_service._post_to_facebook(social_account, post.content)
+                elif platform == 'twitter':
+                    result = social_service._post_to_twitter(social_account, post.content)
+                elif platform == 'instagram':
+                    result = social_service._post_to_instagram(social_account, post.content)
+                
+                if result.get('success'):
+                    # Mark post as published for this platform
+                    post.is_posted = True
+                    post.posted_at = datetime.utcnow()
+                    post.platform = platform  # Update to last published platform
+                    
+                    results.append({
+                        'platform': platform,
+                        'success': True,
+                        'message': result.get('message', f'Successfully published to {platform.title()}'),
+                        'post_id': result.get('post_id', f'unknown_{platform}_post_id')
+                    })
+                else:
+                    results.append({
+                        'platform': platform,
+                        'success': False,
+                        'error': result.get('error', f'Failed to publish to {platform.title()}'),
+                        'details': result
+                    })
                 
             except Exception as e:
                 results.append({
                     'platform': platform,
                     'success': False,
-                    'error': str(e)
+                    'error': f'Publishing exception: {str(e)}',
+                    'exception': str(e)
                 })
         
         db.session.commit()

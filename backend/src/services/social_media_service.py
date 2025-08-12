@@ -366,39 +366,73 @@ class SocialMediaService:
     
     # Posting methods
     def _post_to_linkedin(self, social_account: SocialAccount, content: str, image_url: Optional[str] = None) -> Dict[str, Any]:
-        """Post content to LinkedIn."""
-        # LinkedIn posting implementation
-        # This is a simplified version - full implementation requires more complex API calls
-        
-        post_data = {
-            'author': f'urn:li:person:{social_account.account_id}',
-            'lifecycleState': 'PUBLISHED',
-            'specificContent': {
-                'com.linkedin.ugc.ShareContent': {
-                    'shareCommentary': {
-                        'text': content
-                    },
-                    'shareMediaCategory': 'NONE'
+        """Post content to LinkedIn using the modern API."""
+        try:
+            # LinkedIn API v2 - Create a post
+            post_data = {
+                'author': f'urn:li:person:{social_account.account_id}',
+                'lifecycleState': 'PUBLISHED',
+                'specificContent': {
+                    'com.linkedin.ugc.ShareContent': {
+                        'shareCommentary': {
+                            'text': content
+                        },
+                        'shareMediaCategory': 'NONE'
+                    }
+                },
+                'visibility': {
+                    'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
                 }
-            },
-            'visibility': {
-                'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC'
             }
-        }
-        
-        headers = {
-            'Authorization': f'Bearer {social_account.access_token}',
-            'Content-Type': 'application/json',
-            'X-Restli-Protocol-Version': '2.0.0'
-        }
-        
-        # For now, return a mock response
-        return {
-            'success': True,
-            'platform': 'linkedin',
-            'post_id': 'mock_linkedin_post_id',
-            'message': 'Post would be published to LinkedIn'
-        }
+            
+            headers = {
+                'Authorization': f'Bearer {social_account.access_token}',
+                'Content-Type': 'application/json',
+                'X-Restli-Protocol-Version': '2.0.0'
+            }
+            
+            # Make the actual API call to LinkedIn
+            response = requests.post(
+                'https://api.linkedin.com/v2/ugcPosts',
+                json=post_data,
+                headers=headers
+            )
+            
+            if response.status_code == 201:
+                # Success - post created
+                response_data = response.json()
+                post_id = response_data.get('id', 'unknown')
+                
+                return {
+                    'success': True,
+                    'platform': 'linkedin',
+                    'post_id': post_id,
+                    'message': 'Post successfully published to LinkedIn',
+                    'response': response_data
+                }
+            else:
+                # Error - log the response for debugging
+                error_msg = f"LinkedIn API error: {response.status_code} - {response.text}"
+                print(f"LinkedIn posting error: {error_msg}")
+                
+                return {
+                    'success': False,
+                    'platform': 'linkedin',
+                    'error': error_msg,
+                    'status_code': response.status_code,
+                    'response': response.text
+                }
+                
+        except Exception as e:
+            error_msg = f"LinkedIn posting exception: {str(e)}"
+            print(f"LinkedIn posting exception: {error_msg}")
+            
+            return {
+                'success': False,
+                'platform': 'linkedin',
+                'error': error_msg,
+                'exception': str(e)
+            }
     
     def _post_to_facebook(self, social_account: SocialAccount, content: str, image_url: Optional[str] = None) -> Dict[str, Any]:
         """Post content to Facebook."""
