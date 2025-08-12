@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, redirect, url_for, current_app
+from flask import Blueprint, request, jsonify, url_for, redirect
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from src.models import db, User, SocialAccount
 from src.services.social_media_service import SocialMediaService
@@ -104,15 +104,14 @@ def oauth_callback(platform):
             # Handle OAuth callback
             result = social_service.handle_oauth_callback(platform, code, state, redirect_uri)
             
-            # Return success response (in production, redirect to frontend)
-            return jsonify({
-                'success': True,
-                'message': f'{platform.title()} account connected successfully',
-                'account': result
-            }), 200
+            # Redirect to frontend with success message
+            frontend_url = f"https://social-media-post-generator-frontend.onrender.com/social-accounts?success=true&platform={platform}&account={result['account_name']}"
+            return redirect(frontend_url)
             
         except Exception as e:
-            return jsonify({'error': f'OAuth callback failed: {str(e)}'}), 500
+            # Redirect to frontend with error message
+            frontend_url = f"https://social-media-post-generator-frontend.onrender.com/social-accounts?error=true&message={str(e)}&platform={platform}"
+            return redirect(frontend_url)
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

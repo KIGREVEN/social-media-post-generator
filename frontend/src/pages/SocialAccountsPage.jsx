@@ -44,6 +44,26 @@ const SocialAccountsPage = () => {
 
   useEffect(() => {
     fetchData()
+    
+    // Handle OAuth callback parameters
+    const urlParams = new URLSearchParams(window.location.search)
+    const success = urlParams.get('success')
+    const error = urlParams.get('error')
+    const platform = urlParams.get('platform')
+    const account = urlParams.get('account')
+    const message = urlParams.get('message')
+    
+    if (success === 'true' && platform && account) {
+      toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} Account "${account}" erfolgreich verbunden!`)
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+      // Refresh data
+      setTimeout(() => fetchData(), 1000)
+    } else if (error === 'true' && platform) {
+      toast.error(`Fehler beim Verbinden des ${platform.charAt(0).toUpperCase() + platform.slice(1)} Accounts: ${message || 'Unbekannter Fehler'}`)
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
   }, [])
 
   const fetchData = async () => {
