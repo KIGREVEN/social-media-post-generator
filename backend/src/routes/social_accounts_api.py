@@ -4,6 +4,23 @@ from datetime import datetime
 
 social_accounts_api_bp = Blueprint('social_accounts_api', __name__)
 
+@social_accounts_api_bp.route('/debug/test-logging', methods=['GET'])
+def debug_test_logging():
+    """Debug endpoint to test if logging infrastructure works."""
+    print("=== DEBUG LOGGING TEST ===")
+    print(f"Timestamp: {datetime.utcnow()}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"Request headers: {dict(request.headers)}")
+    print("=== DEBUG LOGGING TEST END ===")
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Debug logging test completed',
+        'timestamp': datetime.utcnow().isoformat(),
+        'note': 'Check backend logs for detailed output'
+    }), 200
+
 @social_accounts_api_bp.route('/accounts', methods=['GET'])
 def get_user_social_accounts():
     """Get all social media accounts for the current user."""
@@ -182,10 +199,15 @@ def disconnect_social_account(platform):
 @social_accounts_api_bp.route('/publish', methods=['POST'])
 def publish_to_social_media():
     """Publish a post to connected social media platforms."""
+    print("🚨🚨🚨 PUBLISH ROUTE ACCESSED 🚨🚨🚨")
+    print(f"=== PUBLISH REQUEST START ===")
+    print(f"Timestamp: {datetime.utcnow()}")
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"Request content type: {request.content_type}")
+    print(f"Request headers: {dict(request.headers)}")
+    
     try:
-        print(f"=== PUBLISH REQUEST START ===")
-        print(f"Timestamp: {datetime.utcnow()}")
-        
         # Verwende einen Standard-User für alle Requests (vereinfacht)
         user = User.query.filter_by(username='admin').first()
         if not user:
