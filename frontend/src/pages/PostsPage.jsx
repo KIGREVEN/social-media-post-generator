@@ -1,30 +1,446 @@
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { 
+  Search, 
+  Filter, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Copy, 
+  Calendar,
+  BarChart3,
+  FileText,
+  Image,
+  ExternalLink
+} from 'lucide-react'
+import { toast } from 'sonner'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://social-media-post-generator-backend.onrender.com'
 
 const PostsPage = () => {
+  const [posts, setPosts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedPlatform, setSelectedPlatform] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState({})
+  const [stats, setStats] = useState({})
+  const [selectedPost, setSelectedPost] = useState(null)
+  const [showPostModal, setShowPostModal] = useState(false)
+
+  const platforms = [
+    { value: '', label: 'Alle Plattformen' },
+    { value: 'linkedin', label: 'LinkedIn' },
+    { value: 'facebook', label: 'Facebook' },
+    { value: 'instagram', label: 'Instagram' },
+    { value: 'twitter', label: 'Twitter' }
+  ]
+
+  const platformColors = {
+    linkedin: 'bg-blue-100 text-blue-800',
+    facebook: 'bg-blue-100 text-blue-800',
+    instagram: 'bg-pink-100 text-pink-800',
+    twitter: 'bg-sky-100 text-sky-800'
+  }
+
+  useEffect(() => {
+    fetchPosts()
+    fetchStats()
+  }, [currentPage, selectedPlatform, searchTerm])
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true)
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        per_page: '10'
+      })
+      
+      if (selectedPlatform) params.append('platform', selectedPlatform)
+      if (searchTerm) params.append('search', searchTerm)
+
+      const response = await fetch(`${API_BASE_URL}/api/library/posts?${params}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setPosts(data.posts)
+        setPagination(data.pagination)
+      } else {
+        toast.error('Fehler beim Laden der Posts')
+      }
+    } catch (error) {
+      toast.error('Verbindungsfehler beim Laden der Posts')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/library/posts/stats`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setStats(data)
+      }
+    } catch (error) {
+      console.error('Fehler beim Laden der Statistiken:', error)
+    }
+  }
+
+  const handleDeletePost = async (postId) => {
+    if (!confirm('Sind Sie sicher, dass Sie diesen Post löschen möchten?')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/library/posts/${postId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        toast.success('Post erfolgreich gelöscht')
+        fetchPosts()
+        fetchStats()
+      } else {
+        toast.error('Fehler beim Löschen des Posts')
+      }
+    } catch (error) {
+      toast.error('Verbindungsfehler beim Löschen')
+    }
+  }
+
+  const handleDuplicatePost = async (postId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/library/posts/${postId}/duplicate`, {
+        method: 'POST'
+      })
+
+      if (response.ok) {
+        toast.success('Post erfolgreich dupliziert')
+        fetchPosts()
+        fetchStats()
+      } else {
+        toast.error('Fehler beim Duplizieren des Posts')
+      }
+    } catch (error) {
+      toast.error('Verbindungsfehler beim Duplizieren')
+    }
+  }
+
+  const handleViewPost = (post) => {
+    setSelectedPost(post)
+    setShowPostModal(true)
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('de-DE', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  const truncateText = (text, maxLength = 150) => {
+    if (text.length <= maxLength) return text
+    return text.substring(0, maxLength) + '...'
+  }
+
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">
           Meine Posts
         </h1>
         <p className="text-gray-600 mt-2">
-          Verwalten Sie Ihre erstellten Social Media Posts
+          Verwalten Sie alle Ihre erstellten Social Media Posts
         </p>
       </div>
 
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Gesamt Posts</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.total_posts || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Veröffentlicht</CardTitle>
+            <ExternalLink className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.posted_count || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Entwürfe</CardTitle>
+            <Edit className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.draft_count || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Diese Woche</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.recent_posts || 0}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter & Suche</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Posts durchsuchen..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <div className="w-full md:w-48">
+              <select
+                value={selectedPlatform}
+                onChange={(e) => setSelectedPlatform(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {platforms.map(platform => (
+                  <option key={platform.value} value={platform.value}>
+                    {platform.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Posts List */}
       <Card>
         <CardHeader>
           <CardTitle>Posts Übersicht</CardTitle>
           <CardDescription>
-            Wird in Phase 6 vollständig implementiert
+            {pagination.total || 0} Posts gefunden
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600">
-            Hier sehen Sie bald alle Ihre erstellten Posts.
-          </p>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Lade Posts...</p>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Keine Posts gefunden</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {posts.map(post => (
+                <div key={post.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        {post.platform && (
+                          <Badge className={platformColors[post.platform] || 'bg-gray-100 text-gray-800'}>
+                            {post.platform.charAt(0).toUpperCase() + post.platform.slice(1)}
+                          </Badge>
+                        )}
+                        {post.is_posted && (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            Veröffentlicht
+                          </Badge>
+                        )}
+                        {post.generated_image_url && (
+                          <Badge variant="outline" className="text-purple-600 border-purple-600">
+                            <Image className="h-3 w-3 mr-1" />
+                            Mit Bild
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <h3 className="font-semibold text-gray-900 mb-2">
+                        {post.title || post.post_theme || 'Untitled Post'}
+                      </h3>
+                      
+                      <p className="text-gray-600 text-sm mb-2">
+                        {truncateText(post.content)}
+                      </p>
+                      
+                      <p className="text-xs text-gray-500">
+                        Erstellt: {formatDate(post.created_at)}
+                        {post.posted_at && (
+                          <span> • Veröffentlicht: {formatDate(post.posted_at)}</span>
+                        )}
+                      </p>
+                    </div>
+                    
+                    <div className="flex gap-2 ml-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewPost(post)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDuplicatePost(post.id)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeletePost(post.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {pagination.pages > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!pagination.has_prev}
+                onClick={() => setCurrentPage(currentPage - 1)}
+              >
+                Zurück
+              </Button>
+              
+              <span className="px-4 py-2 text-sm text-gray-600">
+                Seite {pagination.page} von {pagination.pages}
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!pagination.has_next}
+                onClick={() => setCurrentPage(currentPage + 1)}
+              >
+                Weiter
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Post Detail Modal */}
+      {showPostModal && selectedPost && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-xl font-bold">
+                  {selectedPost.title || selectedPost.post_theme || 'Post Details'}
+                </h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowPostModal(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  {selectedPost.platform && (
+                    <Badge className={platformColors[selectedPost.platform] || 'bg-gray-100 text-gray-800'}>
+                      {selectedPost.platform.charAt(0).toUpperCase() + selectedPost.platform.slice(1)}
+                    </Badge>
+                  )}
+                  {selectedPost.is_posted && (
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      Veröffentlicht
+                    </Badge>
+                  )}
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold mb-2">Inhalt:</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <p className="whitespace-pre-wrap">{selectedPost.content}</p>
+                  </div>
+                </div>
+                
+                {selectedPost.generated_image_url && (
+                  <div>
+                    <h3 className="font-semibold mb-2">Generiertes Bild:</h3>
+                    <img 
+                      src={selectedPost.generated_image_url} 
+                      alt="Generated content" 
+                      className="max-w-full h-auto rounded-lg border"
+                    />
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-semibold">Erstellt:</span>
+                    <p>{formatDate(selectedPost.created_at)}</p>
+                  </div>
+                  {selectedPost.posted_at && (
+                    <div>
+                      <span className="font-semibold">Veröffentlicht:</span>
+                      <p>{formatDate(selectedPost.posted_at)}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {selectedPost.post_theme && (
+                  <div>
+                    <span className="font-semibold">Thema:</span>
+                    <p>{selectedPost.post_theme}</p>
+                  </div>
+                )}
+                
+                {selectedPost.profile_url && (
+                  <div>
+                    <span className="font-semibold">Profil URL:</span>
+                    <p className="break-all text-blue-600">{selectedPost.profile_url}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
