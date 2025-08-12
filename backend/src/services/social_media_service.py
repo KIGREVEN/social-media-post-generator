@@ -368,7 +368,7 @@ class SocialMediaService:
     def _upload_image_to_linkedin(self, social_account: SocialAccount, image_url: str) -> Dict[str, Any]:
         """Upload an image to LinkedIn and return the media URN."""
         try:
-            # Step 1: Register upload
+            # Step 1: Register upload with required header
             register_data = {
                 "registerUploadRequest": {
                     "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
@@ -382,11 +382,14 @@ class SocialMediaService:
                 }
             }
             
+            # CRITICAL: All LinkedIn API requests MUST include this header
             headers = {
                 'Authorization': f'Bearer {social_account.access_token}',
                 'Content-Type': 'application/json',
-                'X-Restli-Protocol-Version': '2.0.0'
+                'X-Restli-Protocol-Version': '2.0.0'  # REQUIRED by LinkedIn API
             }
+            
+            print(f"LinkedIn: Registering upload for image: {image_url}")
             
             # Register the upload
             register_response = requests.post(
@@ -395,40 +398,63 @@ class SocialMediaService:
                 headers=headers
             )
             
+            print(f"LinkedIn: Register response status: {register_response.status_code}")
+            print(f"LinkedIn: Register response: {register_response.text}")
+            
             if register_response.status_code != 200:
                 return {
                     'success': False,
-                    'error': f'LinkedIn upload registration failed: {register_response.status_code} - {register_response.text}'
+                    'error': f'LinkedIn upload registration failed: {register_response.status_code} - {register_response.text}',
+                    'step': 'register_upload'
                 }
             
             register_result = register_response.json()
             upload_url = register_result['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl']
             asset_id = register_result['value']['asset']
             
+            print(f"LinkedIn: Upload URL received: {upload_url}")
+            print(f"LinkedIn: Asset ID: {asset_id}")
+            
             # Step 2: Download the image
+            print(f"LinkedIn: Downloading image from: {image_url}")
             image_response = requests.get(image_url)
             if image_response.status_code != 200:
                 return {
                     'success': False,
-                    'error': f'Failed to download image from {image_url}: {image_response.status_code}'
+                    'error': f'Failed to download image from {image_url}: {image_response.status_code}',
+                    'step': 'download_image'
                 }
             
-            # Step 3: Upload the image binary data
+            print(f"LinkedIn: Image downloaded, size: {len(image_response.content)} bytes")
+            
+            # Step 3: Upload the image binary data using PUT (as per official documentation)
+            # The documentation shows curl -i --upload-file which translates to PUT with binary data
             upload_headers = {
-                'Authorization': f'Bearer {social_account.access_token}',
+                'Authorization': f'Bearer {social_account.access_token}'
+                # No Content-Type header for binary upload as per LinkedIn docs
             }
             
+            print(f"LinkedIn: Uploading binary data to: {upload_url}")
+            
+            # Use PUT instead of POST - this is the correct method per LinkedIn documentation
             upload_response = requests.put(
                 upload_url,
-                data=image_response.content,
+                data=image_response.content,  # Raw binary data
                 headers=upload_headers
             )
+            
+            print(f"LinkedIn: Upload response status: {upload_response.status_code}")
+            print(f"LinkedIn: Upload response: {upload_response.text}")
             
             if upload_response.status_code not in [200, 201]:
                 return {
                     'success': False,
-                    'error': f'LinkedIn image upload failed: {upload_response.status_code} - {upload_response.text}'
+                    'error': f'LinkedIn image upload failed: {upload_response.status_code} - {upload_response.text}',
+                    'step': 'binary_upload',
+                    'upload_url': upload_url
                 }
+            
+            print(f"LinkedIn: Image upload successful!")
             
             return {
                 'success': True,
@@ -437,9 +463,12 @@ class SocialMediaService:
             }
             
         except Exception as e:
+            error_msg = f'LinkedIn image upload exception: {str(e)}'
+            print(f"LinkedIn: Exception during upload: {error_msg}")
             return {
                 'success': False,
-                'error': f'LinkedIn image upload exception: {str(e)}'
+                'error': error_msg,
+                'step': 'exception'
             }
 
     def _post_to_linkedin(self, social_account: SocialAccount, content: str, image_url: Optional[str] = None) -> Dict[str, Any]:
@@ -509,8 +538,12 @@ class SocialMediaService:
             headers = {
                 'Authorization': f'Bearer {social_account.access_token}',
                 'Content-Type': 'application/json',
-                'X-Restli-Protocol-Version': '2.0.0'
+                'X-Restli-Protocol-Version': '2.0.0'  # REQUIRED by LinkedIn API
             }
+            
+            print(f"LinkedIn: Creating post with image: {bool(image_url)}")
+            print(f"LinkedIn: Media asset: {media_asset}")
+            print(f"LinkedIn: Post data: {json.dumps(post_data, indent=2)}")
             
             # Make the actual API call to LinkedIn
             response = requests.post(
@@ -518,6 +551,9 @@ class SocialMediaService:
                 json=post_data,
                 headers=headers
             )
+            
+            print(f"LinkedIn: Post response status: {response.status_code}")
+            print(f"LinkedIn: Post response: {response.text}")
             
             if response.status_code == 201:
                 # Success - post created
