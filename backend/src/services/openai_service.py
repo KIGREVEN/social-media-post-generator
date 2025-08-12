@@ -147,42 +147,72 @@ class OpenAIService:
     def create_image_prompt(self, post_content: str, platform: str = "linkedin") -> str:
         """
         Create a platform-specific image prompt based on the generated post content.
+        Focus on authentic everyday scenarios instead of corporate presentations.
         
         Args:
             post_content: The generated post content to base the image on
             platform: Target platform (linkedin, facebook, twitter, instagram)
             
         Returns:
-            Platform-specific image prompt optimized for GPT-Image-1
+            Platform-specific image prompt optimized for authentic everyday photos
         """
         
         # Platform-specific descriptions
         platform_descriptions = {
-            "linkedin": "ein modernes, professionelles LinkedIn-Bild",
-            "facebook": "ein ansprechendes, professionelles Facebook-Bild", 
-            "instagram": "ein visuell ansprechendes, modernes Instagram-Bild",
-            "twitter": "ein kompaktes, aussagekräftiges Twitter-Bild"
+            "linkedin": "ein authentisches, alltägliches Foto",
+            "facebook": "ein natürliches, alltägliches Foto", 
+            "instagram": "ein authentisches, alltägliches Foto",
+            "twitter": "ein natürliches, alltägliches Foto"
         }
         
         platform_desc = platform_descriptions.get(platform, platform_descriptions["linkedin"])
         
-        # Create the prompt based on user's template
+        # Create the improved prompt focusing on authentic everyday scenarios
         prompt = f"""
-Erstelle {platform_desc}. Das Bild soll zu folgendem {platform.title()}-Post passen:
+Erstelle {platform_desc} das zu folgendem Social Media Post passt:
 
 ---
 {post_content}
 ---
 
-Berücksichtige dabei:
-- Die zentrale Botschaft des Posts
-- Visuelle Symbole, die dazu passen (z. B. Pfeile, Wachstumskurven, Zielscheiben, Menschen, Technik)
-- Den Stil: seriös, modern, aufgeräumt, für Business-Posts geeignet
-- Der Titel des Produkts oder Angebots muss deutlich im Bild sein, dieser darf aber auf keinen Fall in "" stehen.
-- Die Texte in dem Bild sollen auf Deutsch sein außer es sind Produktnamen
-- Design: professional photography, ultra-realistic, 4K UHD resolution, shallow depth of field, soft natural lighting, high dynamic range, sharp focus, bokeh background, cinematic composition
+🎯 WICHTIG: Erstelle ein authentisches Alltags-Foto, NICHT eine Corporate-Präsentation!
 
-Das Bild soll die Kernaussage des Posts visuell unterstützen und professionell wirken.
+📸 Bildstil:
+- Zeige echte Menschen in natürlichen Situationen
+- Fokus auf die tatsächliche Nutzung des Produkts/Services
+- Alltägliche, realistische Szenarien
+- Natürliche Umgebung, keine Büro-Präsentationen
+- Echte Emotionen und Interaktionen
+
+🏢 Branchen-Beispiele:
+- Markisen/Sonnenschutz: Menschen entspannen unter Markise im Garten/Terrasse
+- Restaurant/Gastronomie: Gäste genießen Essen in gemütlicher Atmosphäre
+- Fitness/Sport: Echte Menschen beim Training, nicht gestellte Posen
+- Handwerk: Handwerker bei der Arbeit, authentische Arbeitsszene
+- Technologie: Menschen nutzen Technik natürlich im Alltag
+- Beratung: Natürliches Gespräch zwischen Menschen
+- Einzelhandel: Kunden in echter Einkaufssituation
+
+🎨 Technische Qualität:
+- Professional photography, ultra-realistic
+- Natural lighting, authentic colors
+- High resolution, sharp focus
+- Candid moments, not staged poses
+- Real-world settings
+
+🚫 VERMEIDE:
+- Geschäftsmänner mit Präsentationen
+- Corporate Symbole (Pfeile, Diagramme, Zielscheiben)
+- Künstliche Business-Szenarien
+- Gestellte Stock-Photo-Posen
+- Büro-Umgebungen (außer wenn relevant)
+
+📝 Text im Bild:
+- Produktname/Firmenname natürlich integriert (z.B. auf Schild, Produkt)
+- Deutsche Texte, außer bei Produktnamen
+- Subtil und authentisch platziert
+
+Das Bild soll zeigen, wie echte Menschen das Produkt/den Service im Alltag nutzen und davon profitieren.
         """
         
         return prompt.strip()
