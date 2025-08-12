@@ -118,16 +118,15 @@ const PostGeneratorPage = () => {
     if (!generatedPost) return
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/social/publish`, {
+      const response = await fetch(`${API_BASE_URL}/api/social-accounts/publish`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
+          // Removed JWT token dependency - no Authorization header needed
         },
         body: JSON.stringify({
-          platform: platform,
-          content: generatedPost.content,
-          image_url: generatedPost.generated_image_url
+          post_id: generatedPost.id,
+          platforms: [platform]
         })
       })
 
