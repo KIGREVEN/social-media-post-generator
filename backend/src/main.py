@@ -392,6 +392,36 @@ def create_app(config_name=None):
                 
         except Exception as e:
             return jsonify({'error': f'Error scheduling existing post: {str(e)}'}), 500
+
+    @app.route('/api/scheduler/scheduled/<int:post_id>', methods=['DELETE', 'OPTIONS'])
+    def cancel_scheduled_post(post_id):
+        """Cancel a scheduled post with lazy service loading."""
+        if request.method == 'OPTIONS':
+            # Handle CORS preflight request
+            response = jsonify({'status': 'ok'})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+            response.headers.add('Access-Control-Allow-Methods', 'DELETE,OPTIONS')
+            return response
+            
+        try:
+            from src.services.scheduler_service import SchedulerService
+            
+            user_id = request.args.get('user_id', 1, type=int)
+            
+            # Cancel the scheduled post
+            scheduler_service = SchedulerService()
+            success = scheduler_service.cancel_scheduled_post(post_id, user_id)
+            
+            if success:
+                return jsonify({
+                    'message': 'Scheduled post cancelled successfully'
+                }), 200
+            else:
+                return jsonify({'error': 'Failed to cancel scheduled post or post not found'}), 404
+                
+        except Exception as e:
+            return jsonify({'error': f'Error cancelling scheduled post: {str(e)}'}), 500
     
     # Run database migration on first request
     migration_done = False
