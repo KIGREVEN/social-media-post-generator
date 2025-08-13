@@ -27,9 +27,9 @@ def login():
         if not user.is_active:
             return jsonify({'error': 'Account is deactivated'}), 401
         
-        # Create access token
+        # Create access token with string user ID (required for JWT validation)
         access_token = create_access_token(
-            identity=user.id,
+            identity=str(user.id),  # Convert to string for JWT compatibility
             expires_delta=timedelta(days=7)
         )
         
@@ -80,9 +80,9 @@ def register():
         db.session.add(post_usage)
         db.session.commit()
         
-        # Create access token
+        # Create access token with string user ID (required for JWT validation)
         access_token = create_access_token(
-            identity=user.id,
+            identity=str(user.id),  # Convert to string for JWT compatibility
             expires_delta=timedelta(days=7)
         )
         
@@ -113,16 +113,17 @@ def get_profile():
     """Get current user profile."""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        # Convert string user ID back to integer for database query
+        user = User.query.get(int(current_user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404
         
         # Get user's post usage
-        post_usage = PostUsage.query.filter_by(user_id=current_user_id).first()
+        post_usage = PostUsage.query.filter_by(user_id=int(current_user_id)).first()
         if not post_usage:
             # Create post usage if it doesn't exist
-            post_usage = PostUsage(user_id=current_user_id)
+            post_usage = PostUsage(user_id=int(current_user_id))
             db.session.add(post_usage)
             db.session.commit()
         
@@ -140,7 +141,8 @@ def update_profile():
     """Update current user profile."""
     try:
         current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
+        # Convert string user ID back to integer for database query
+        user = User.query.get(int(current_user_id))
         
         if not user:
             return jsonify({'error': 'User not found'}), 404
@@ -152,7 +154,7 @@ def update_profile():
             # Check if email is already taken by another user
             existing_user = User.query.filter(
                 User.email == data['email'],
-                User.id != current_user_id
+                User.id != int(current_user_id)
             ).first()
             if existing_user:
                 return jsonify({'error': 'Email already exists'}), 409
