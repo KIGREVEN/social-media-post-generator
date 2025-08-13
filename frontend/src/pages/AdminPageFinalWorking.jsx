@@ -10,6 +10,24 @@ const AdminPageFinalWorking = () => {
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [debugLogs, setDebugLogs] = useState([]);
   const [activeTab, setActiveTab] = useState('users');
+  
+  // New states for CRUD operations
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [createUserForm, setCreateUserForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'user',
+    subscription: 'free'
+  });
+  const [editUserForm, setEditUserForm] = useState({
+    username: '',
+    email: '',
+    role: 'user',
+    subscription: 'free'
+  });
 
   // Debug-Logging-Funktion
   const addDebugLog = (message, type = 'info') => {
@@ -166,6 +184,122 @@ const AdminPageFinalWorking = () => {
       enterprise: users.filter(u => u.subscription === 'enterprise').length
     };
     return stats;
+  };
+
+  // CRUD Functions
+  
+  // Create User
+  const handleCreateUser = async () => {
+    try {
+      addDebugLog('Starte Benutzer-Erstellung...');
+      
+      // Validation
+      if (!createUserForm.username || !createUserForm.email || !createUserForm.password) {
+        alert('Bitte füllen Sie alle Pflichtfelder aus.');
+        return;
+      }
+      
+      const response = await fetch('https://social-media-post-generator-backend.onrender.com/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(createUserForm)
+      });
+      
+      if (response.ok) {
+        const newUser = await response.json();
+        addDebugLog(`✅ Benutzer erfolgreich erstellt: ${newUser.username}`, 'success');
+        await fetchUsers();
+        setShowCreateUserModal(false);
+        setCreateUserForm({
+          username: '',
+          email: '',
+          password: '',
+          role: 'user',
+          subscription: 'free'
+        });
+        alert(`Benutzer ${createUserForm.username} erfolgreich erstellt!`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Fehler beim Erstellen des Benutzers');
+      }
+    } catch (error) {
+      addDebugLog(`❌ Fehler beim Erstellen: ${error.message}`, 'error');
+      alert(`Fehler beim Erstellen des Benutzers: ${error.message}`);
+    }
+  };
+  
+  // Edit User
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setEditUserForm({
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      subscription: user.subscription || 'free'
+    });
+    setShowEditUserModal(true);
+    addDebugLog(`Bearbeite Benutzer: ${user.username}`);
+  };
+  
+  const handleUpdateUser = async () => {
+    try {
+      addDebugLog(`Starte Benutzer-Update für: ${editingUser.username}`);
+      
+      const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/admin/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editUserForm)
+      });
+      
+      if (response.ok) {
+        const updatedUser = await response.json();
+        addDebugLog(`✅ Benutzer erfolgreich aktualisiert: ${updatedUser.username}`, 'success');
+        await fetchUsers();
+        setShowEditUserModal(false);
+        setEditingUser(null);
+        alert(`Benutzer ${editUserForm.username} erfolgreich aktualisiert!`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Fehler beim Aktualisieren des Benutzers');
+      }
+    } catch (error) {
+      addDebugLog(`❌ Fehler beim Aktualisieren: ${error.message}`, 'error');
+      alert(`Fehler beim Aktualisieren des Benutzers: ${error.message}`);
+    }
+  };
+  
+  // Delete User
+  const handleDeleteUser = async (user) => {
+    if (!confirm(`Sind Sie sicher, dass Sie ${user.username} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
+      return;
+    }
+    
+    try {
+      addDebugLog(`Starte Benutzer-Löschung für: ${user.username}`);
+      
+      const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/admin/users/${user.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        addDebugLog(`✅ Benutzer erfolgreich gelöscht: ${user.username}`, 'success');
+        await fetchUsers();
+        alert(`Benutzer ${user.username} erfolgreich gelöscht!`);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Fehler beim Löschen des Benutzers');
+      }
+    } catch (error) {
+      addDebugLog(`❌ Fehler beim Löschen: ${error.message}`, 'error');
+      alert(`Fehler beim Löschen des Benutzers: ${error.message}`);
+    }
   };
 
   useEffect(() => {
@@ -349,7 +483,7 @@ const AdminPageFinalWorking = () => {
                   <button 
                     onClick={() => {
                       addDebugLog('Benutzer erstellen Button geklickt');
-                      alert('Benutzer erstellen Funktion wird implementiert...');
+                      setShowCreateUserModal(true);
                     }}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                   >
@@ -429,22 +563,14 @@ const AdminPageFinalWorking = () => {
                                 💳 Subscription
                               </button>
                               <button
-                                onClick={() => {
-                                  addDebugLog(`Bearbeiten Button geklickt für: ${user.username}`);
-                                  alert(`Bearbeiten Funktion für ${user.username} wird implementiert...`);
-                                }}
+                                onClick={() => handleEditUser(user)}
                                 className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition-colors"
                                 title="Bearbeiten"
                               >
                                 ✏️
                               </button>
                               <button
-                                onClick={() => {
-                                  addDebugLog(`Löschen Button geklickt für: ${user.username}`);
-                                  if (confirm(`Sind Sie sicher, dass Sie ${user.username} löschen möchten?`)) {
-                                    alert(`Löschen Funktion für ${user.username} wird implementiert...`);
-                                  }
-                                }}
+                                onClick={() => handleDeleteUser(user)}
                                 className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors"
                                 title="Löschen"
                               >
@@ -547,17 +673,185 @@ const AdminPageFinalWorking = () => {
                   </div>
                 </div>
               </div>
-            )}
+          </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Neuen Benutzer erstellen</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername *</label>
+                <input
+                  type="text"
+                  value={createUserForm.username}
+                  onChange={(e) => setCreateUserForm({...createUserForm, username: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Benutzername eingeben"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+                <input
+                  type="email"
+                  value={createUserForm.email}
+                  onChange={(e) => setCreateUserForm({...createUserForm, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="E-Mail eingeben"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
+                <input
+                  type="password"
+                  value={createUserForm.password}
+                  onChange={(e) => setCreateUserForm({...createUserForm, password: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Passwort eingeben"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
+                <select
+                  value={createUserForm.role}
+                  onChange={(e) => setCreateUserForm({...createUserForm, role: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="user">Benutzer</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
+                <select
+                  value={createUserForm.subscription}
+                  onChange={(e) => setCreateUserForm({...createUserForm, subscription: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="premium">Premium</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowCreateUserModal(false);
+                  setCreateUserForm({
+                    username: '',
+                    email: '',
+                    password: '',
+                    role: 'user',
+                    subscription: 'free'
+                  });
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleCreateUser}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Benutzer erstellen
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Subscription-Dialog */}
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Benutzer bearbeiten: {editingUser.username}</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
+                <input
+                  type="text"
+                  value={editUserForm.username}
+                  onChange={(e) => setEditUserForm({...editUserForm, username: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+                <input
+                  type="email"
+                  value={editUserForm.email}
+                  onChange={(e) => setEditUserForm({...editUserForm, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
+                <select
+                  value={editUserForm.role}
+                  onChange={(e) => setEditUserForm({...editUserForm, role: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="user">Benutzer</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
+                <select
+                  value={editUserForm.subscription}
+                  onChange={(e) => setEditUserForm({...editUserForm, subscription: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="premium">Premium</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditUserModal(false);
+                  setEditingUser(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleUpdateUser}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Änderungen speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Subscription Dialog */}
       {showSubscriptionDialog && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Subscription ändern</h3>
-            <p className="text-sm text-gray-600 mb-4">Subscription für {selectedUser.username} ändern</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Subscription ändern für: {selectedUser.username}
+            </h3>me="text-sm text-gray-600 mb-4">Subscription für {selectedUser.username} ändern</p>
             
             <div className="space-y-3 mb-6">
               <div>
