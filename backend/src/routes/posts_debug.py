@@ -63,7 +63,7 @@ def debug_generate_post():
         openai_service = OpenAIService()
         
         # Generate post content
-        post_content = openai_service.generate_post(
+        post_content = openai_service.generate_social_media_post(
             profile_url=profile_url,
             post_theme=post_theme,
             additional_details=additional_details,
