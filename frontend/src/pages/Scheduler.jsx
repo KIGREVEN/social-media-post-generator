@@ -144,19 +144,19 @@ const Scheduler = () => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Post-Planer</h1>
-        <p className="text-gray-600">Planen Sie Ihre LinkedIn-Posts für bestimmte Zeiten</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Post-Planer</h1>
+        <p className="text-gray-600 dark:text-gray-300">Planen Sie Ihre LinkedIn-Posts für bestimmte Zeiten</p>
       </div>
 
       {/* Error and Success Messages */}
       {error && (
-        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-700 dark:text-red-400 rounded">
           {error}
         </div>
       )}
       
       {success && (
-        <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+        <div className="mb-4 p-4 bg-green-100 dark:bg-green-900/20 border border-green-400 dark:border-green-800 text-green-700 dark:text-green-400 rounded">
           {success}
         </div>
       )}
@@ -180,31 +180,31 @@ const Scheduler = () => {
 
       {/* Schedule Form */}
       {showScheduleForm && (
-        <div className="mb-8 bg-white p-6 rounded-lg shadow-md border">
-          <h2 className="text-xl font-semibold mb-4">Neuen Post planen</h2>
+        <div className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border dark:border-gray-700">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Neuen Post planen</h2>
           
           <form onSubmit={handleSchedulePost} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Titel (optional)
               </label>
               <input
                 type="text"
                 value={scheduleForm.title}
                 onChange={(e) => setScheduleForm({...scheduleForm, title: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="Post-Titel..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Inhalt *
               </label>
               <textarea
                 value={scheduleForm.content}
                 onChange={(e) => setScheduleForm({...scheduleForm, content: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 rows="4"
                 placeholder="Post-Inhalt..."
                 required
@@ -212,27 +212,27 @@ const Scheduler = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Bild-URL (optional)
               </label>
               <input
                 type="url"
                 value={scheduleForm.image_url}
                 onChange={(e) => setScheduleForm({...scheduleForm, image_url: e.target.value})}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="https://example.com/image.jpg"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Plattform *
                 </label>
                 <select
                   value={scheduleForm.platform}
                   onChange={(e) => setScheduleForm({...scheduleForm, platform: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 >
                   <option value="linkedin">LinkedIn</option>
@@ -241,13 +241,13 @@ const Scheduler = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Zeitzone
                 </label>
                 <select
                   value={scheduleForm.timezone}
                   onChange={(e) => setScheduleForm({...scheduleForm, timezone: e.target.value})}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="Europe/Berlin">Europa/Berlin</option>
                   <option value="UTC">UTC</option>
@@ -259,7 +259,7 @@ const Scheduler = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Datum *
                 </label>
                 <input
@@ -267,13 +267,13 @@ const Scheduler = () => {
                   value={scheduleForm.scheduled_date}
                   onChange={(e) => setScheduleForm({...scheduleForm, scheduled_date: e.target.value})}
                   min={getMinDate()}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Uhrzeit *
                 </label>
                 <input
@@ -281,7 +281,7 @@ const Scheduler = () => {
                   value={scheduleForm.scheduled_time}
                   onChange={(e) => setScheduleForm({...scheduleForm, scheduled_time: e.target.value})}
                   min={getMinTime()}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   required
                 />
               </div>
@@ -309,13 +309,13 @@ const Scheduler = () => {
 
       {/* Filter */}
       <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Nach Status filtern:
         </label>
         <select
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
         >
           <option value="">Alle Status</option>
           <option value="scheduled">Geplant</option>
@@ -326,32 +326,32 @@ const Scheduler = () => {
       </div>
 
       {/* Scheduled Posts List */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold">Geplante Posts</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Geplante Posts</h2>
         </div>
 
         {loading ? (
           <div className="p-6 text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Lade geplante Posts...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-400">Lade geplante Posts...</p>
           </div>
         ) : scheduledPosts.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
             Keine geplanten Posts gefunden.
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
             {scheduledPosts.map((post) => (
               <div key={post.id} className="p-6">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
                     {post.title && (
-                      <h3 className="font-semibold text-gray-900 mb-1">{post.title}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{post.title}</h3>
                     )}
-                    <p className="text-gray-600 mb-2 line-clamp-3">{post.content}</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-2 line-clamp-3">{post.content}</p>
                     
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                       <span>📅 {formatDateTime(post.scheduled_time)}</span>
                       <span>🌐 {post.platform}</span>
                       <span>🌍 {post.timezone}</span>
@@ -386,7 +386,7 @@ const Scheduler = () => {
                 )}
 
                 {post.error_message && (
-                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm">
                     <strong>Fehler:</strong> {post.error_message}
                   </div>
                 )}
