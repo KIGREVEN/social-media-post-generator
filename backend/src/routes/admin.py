@@ -1,21 +1,15 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
 from src.models import db, User, Post, SocialAccount, PostUsage
 from functools import wraps
 
 admin_bp = Blueprint('admin', __name__)
 
+# NO JWT AUTHENTICATION - OPEN ACCESS
 def admin_required(f):
-    """Decorator to require admin role."""
+    """Decorator that does nothing - open access."""
     @wraps(f)
-    @jwt_required()
     def decorated_function(*args, **kwargs):
-        current_user_id = get_jwt_identity()
-        user = User.query.get(current_user_id)
-        
-        if not user or not user.is_admin():
-            return jsonify({'error': 'Admin access required'}), 403
-        
+        # No authentication required - open access
         return f(*args, **kwargs)
     return decorated_function
 
@@ -159,10 +153,7 @@ def delete_user(user_id):
         if not user:
             return jsonify({'error': 'User not found'}), 404
         
-        # Prevent admin from deleting themselves
-        current_user_id = get_jwt_identity()
-        if user_id == current_user_id:
-            return jsonify({'error': 'Cannot delete your own account'}), 400
+        # No JWT check - open access
         
         db.session.delete(user)
         db.session.commit()
