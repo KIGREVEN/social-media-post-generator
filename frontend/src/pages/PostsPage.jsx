@@ -97,7 +97,7 @@ const PostsPage = () => {
       if (searchTerm) params.append('search', searchTerm)
 
       const token = localStorage.getItem('token')
-      const response = await fetch(`${API_BASE_URL}/api/library/posts?${params}`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts?${params}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -107,7 +107,13 @@ const PostsPage = () => {
 
       if (response.ok) {
         setPosts(data.posts)
-        setPagination(data.pagination)
+        // Handle pagination format from posts endpoint
+        setPagination({
+          current_page: data.current_page,
+          total_pages: data.pages,
+          total_posts: data.total,
+          per_page: data.per_page
+        })
       } else {
         toast.error('Fehler beim Laden der Posts')
       }
@@ -121,7 +127,7 @@ const PostsPage = () => {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await fetch(`${API_BASE_URL}/api/library/posts/stats`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts?per_page=1000`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -130,7 +136,17 @@ const PostsPage = () => {
       const data = await response.json()
 
       if (response.ok) {
-        setStats(data)
+        // Calculate stats from posts data
+        const totalPosts = data.total || 0
+        const publishedPosts = data.posts ? data.posts.filter(post => post.is_posted).length : 0
+        const draftPosts = totalPosts - publishedPosts
+        
+        setStats({
+          total_posts: totalPosts,
+          published_posts: publishedPosts,
+          draft_posts: draftPosts,
+          platforms: data.posts ? [...new Set(data.posts.map(post => post.platform))].length : 0
+        })
       }
     } catch (error) {
       console.error('Fehler beim Laden der Statistiken:', error)
