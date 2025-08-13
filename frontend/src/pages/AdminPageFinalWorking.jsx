@@ -226,18 +226,17 @@ const AdminPageFinalWorking = () => {
         return;
       }
       
-      const response = await fetch('https://social-media-post-generator-backend.onrender.com/api/admin/users', {
+      const response = await fetch('https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
         },
         body: JSON.stringify(createUserForm)
       });
       
       if (response.ok) {
-        const newUser = await response.json();
-        addDebugLog(`✅ Benutzer erfolgreich erstellt: ${newUser.username}`, 'success');
+        const result = await response.json();
+        addDebugLog(`✅ Benutzer erfolgreich erstellt: ${result.user.username}`, 'success');
         await fetchUsers();
         setShowCreateUserModal(false);
         setCreateUserForm({
@@ -275,18 +274,17 @@ const AdminPageFinalWorking = () => {
     try {
       addDebugLog(`Starte Benutzer-Update für: ${editingUser.username}`);
       
-      const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/admin/users/${editingUser.id}`, {
+      const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
         },
         body: JSON.stringify(editUserForm)
       });
       
       if (response.ok) {
-        const updatedUser = await response.json();
-        addDebugLog(`✅ Benutzer erfolgreich aktualisiert: ${updatedUser.username}`, 'success');
+        const result = await response.json();
+        addDebugLog(`✅ Benutzer erfolgreich aktualisiert: ${result.user.username}`, 'success');
         await fetchUsers();
         setShowEditUserModal(false);
         setEditingUser(null);
@@ -303,28 +301,25 @@ const AdminPageFinalWorking = () => {
   
   // Delete User
   const handleDeleteUser = async (user) => {
-    if (!confirm(`Sind Sie sicher, dass Sie ${user.username} löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
-      return;
-    }
-    
     try {
       addDebugLog(`Starte Benutzer-Löschung für: ${user.username}`);
       
-      const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/admin/users/${user.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
+      if (confirm(`Sind Sie sicher, dass Sie ${user.username} löschen möchten?`)) {
+        const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users/${user.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          addDebugLog(`✅ Benutzer erfolgreich gelöscht: ${user.username}`, 'success');
+          await fetchUsers();
+          alert(`Benutzer ${user.username} erfolgreich gelöscht!`);
+        } else {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Fehler beim Löschen des Benutzers');
         }
-      });
-      
-      if (response.ok) {
-        addDebugLog(`✅ Benutzer erfolgreich gelöscht: ${user.username}`, 'success');
-        await fetchUsers();
-        alert(`Benutzer ${user.username} erfolgreich gelöscht!`);
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Löschen des Benutzers');
       }
     } catch (error) {
       addDebugLog(`❌ Fehler beim Löschen: ${error.message}`, 'error');

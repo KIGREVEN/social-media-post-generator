@@ -111,9 +111,16 @@ def get_debug_posts():
         return jsonify({'error': str(e)}), 500
 
 
-@debug_admin_bp.route('/debug-users', methods=['POST'])
+@debug_admin_bp.route('/debug-users', methods=['POST', 'OPTIONS'])
 def create_debug_user():
     """Create a new user without JWT (debug only)."""
+    if request.method == 'OPTIONS':
+        # Handle CORS preflight request
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+        return response
     try:
         data = request.get_json()
         
@@ -176,9 +183,16 @@ def create_debug_user():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['PUT'])
+@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['PUT', 'OPTIONS'])
 def update_debug_user(user_id):
     """Update a user without JWT (debug only)."""
+    if request.method == 'OPTIONS':
+        # Handle CORS preflight request
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'PUT,OPTIONS')
+        return response
     try:
         user = User.query.get(user_id)
         if not user:
@@ -255,9 +269,16 @@ def update_debug_user(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['DELETE'])
+@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['DELETE', 'OPTIONS'])
 def delete_debug_user(user_id):
     """Delete a user without JWT (debug only)."""
+    if request.method == 'OPTIONS':
+        # Handle CORS preflight request
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'DELETE,OPTIONS')
+        return response
     try:
         user = User.query.get(user_id)
         if not user:
