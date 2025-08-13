@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { Toaster } from '@/components/ui/sonner'
 import Navbar from './components/Navbar'
 import HomePage from './pages/HomePage'
@@ -19,11 +20,12 @@ import './App.css'
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-gray-50">
-          <Navbar />
-          <main className="container mx-auto px-4 py-8">
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+            <Navbar />
+            <main className="container mx-auto px-4 py-8">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/simple-generator" element={<SimplePostGeneratorPage />} />
@@ -92,6 +94,7 @@ function App() {
         </div>
       </Router>
     </AuthProvider>
+  </ThemeProvider>
   )
 }
 
