@@ -67,17 +67,15 @@ const AdminPageFinalWorking = () => {
         }
       }
 
-      if (userData) {
-        setUsers(userData.users || []);
-        setError('');
-        addDebugLog(`✅ ${userData.users?.length || 0} Benutzer geladen`, 'success');
+      if (userData && userData.users) {
+        setUsers(userData.users);
+        addDebugLog(`✅ ${userData.users.length} Benutzer geladen`, 'success');
       } else {
-        throw new Error('Alle API-Endpunkte fehlgeschlagen');
+        throw new Error('Keine Benutzer-Daten erhalten');
       }
-
     } catch (err) {
-      setError(`Fehler beim Laden der Benutzer: ${err.message}`);
-      addDebugLog(`❌ Fehler: ${err.message}`, 'error');
+      setError('Fehler beim Laden der Benutzer: ' + err.message);
+      addDebugLog(`❌ Fehler beim Laden: ${err.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -646,11 +644,24 @@ const AdminPageFinalWorking = () => {
             {activeTab === 'debug' && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Debug-Informationen</h2>
+                <p className="text-sm text-gray-600 mb-4">API-Aufrufe und Fehlermeldungen</p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm max-h-96 overflow-y-auto">
+                  {debugLogs.length === 0 ? (
+                    <div className="text-gray-500">Keine Debug-Informationen verfügbar.</div>
+                  ) : (
+                    debugLogs.map((log, index) => (
+                      <div key={index} className="mb-1">
+                        {log}
+                      </div>
+                    ))
+                  )}
+                </div>
+                
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h3 className="font-medium text-green-800">API-Status</h3>
-                    <p className="text-sm text-green-600">Verfügbar</p>
+                    <h3 className="font-medium text-green-800">Backend-Verbindung</h3>
+                    <p className="text-sm text-green-600">Verbunden</p>
                   </div>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                     <h3 className="font-medium text-green-800">Datenbank</h3>
@@ -662,232 +673,230 @@ const AdminPageFinalWorking = () => {
                   </div>
                 </div>
               </div>
-            )}
+          </div>
+      )}
+
+      {/* Create User Modal */}
+      {showCreateUserModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Neuen Benutzer erstellen</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername *</label>
+                <input
+                  type="text"
+                  value={createUserForm.username}
+                  onChange={(e) => setCreateUserForm({...createUserForm, username: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Benutzername eingeben"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+                <input
+                  type="email"
+                  value={createUserForm.email}
+                  onChange={(e) => setCreateUserForm({...createUserForm, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="E-Mail eingeben"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
+                <input
+                  type="password"
+                  value={createUserForm.password}
+                  onChange={(e) => setCreateUserForm({...createUserForm, password: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Passwort eingeben"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
+                <select
+                  value={createUserForm.role}
+                  onChange={(e) => setCreateUserForm({...createUserForm, role: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="user">Benutzer</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
+                <select
+                  value={createUserForm.subscription}
+                  onChange={(e) => setCreateUserForm({...createUserForm, subscription: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="premium">Premium</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowCreateUserModal(false);
+                  setCreateUserForm({
+                    username: '',
+                    email: '',
+                    password: '',
+                    role: 'user',
+                    subscription: 'free'
+                  });
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleCreateUser}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Benutzer erstellen
+              </button>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Create User Modal */}
-        {showCreateUserModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Neuen Benutzer erstellen</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername *</label>
-                  <input
-                    type="text"
-                    value={createUserForm.username}
-                    onChange={(e) => setCreateUserForm({...createUserForm, username: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Benutzername eingeben"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
-                  <input
-                    type="email"
-                    value={createUserForm.email}
-                    onChange={(e) => setCreateUserForm({...createUserForm, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="E-Mail eingeben"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
-                  <input
-                    type="password"
-                    value={createUserForm.password}
-                    onChange={(e) => setCreateUserForm({...createUserForm, password: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Passwort eingeben"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
-                  <select
-                    value={createUserForm.role}
-                    onChange={(e) => setCreateUserForm({...createUserForm, role: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="user">Benutzer</option>
-                    <option value="admin">Administrator</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
-                  <select
-                    value={createUserForm.subscription}
-                    onChange={(e) => setCreateUserForm({...createUserForm, subscription: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="free">Free</option>
-                    <option value="basic">Basic</option>
-                    <option value="premium">Premium</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
-                </div>
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Benutzer bearbeiten: {editingUser.username}</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
+                <input
+                  type="text"
+                  value={editUserForm.username}
+                  onChange={(e) => setEditUserForm({...editUserForm, username: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowCreateUserModal(false);
-                    setCreateUserForm({
-                      username: '',
-                      email: '',
-                      password: '',
-                      role: 'user',
-                      subscription: 'free'
-                    });
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+                <input
+                  type="email"
+                  value={editUserForm.email}
+                  onChange={(e) => setEditUserForm({...editUserForm, email: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
+                <select
+                  value={editUserForm.role}
+                  onChange={(e) => setEditUserForm({...editUserForm, role: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  Abbrechen
-                </button>
-                <button
-                  onClick={handleCreateUser}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  <option value="user">Benutzer</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
+                <select
+                  value={editUserForm.subscription}
+                  onChange={(e) => setEditUserForm({...editUserForm, subscription: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  Benutzer erstellen
-                </button>
+                  <option value="free">Free</option>
+                  <option value="basic">Basic</option>
+                  <option value="premium">Premium</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Edit User Modal */}
-        {showEditUserModal && editingUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Benutzer bearbeiten: {editingUser.username}</h3>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
-                  <input
-                    type="text"
-                    value={editUserForm.username}
-                    onChange={(e) => setEditUserForm({...editUserForm, username: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
-                  <input
-                    type="email"
-                    value={editUserForm.email}
-                    onChange={(e) => setEditUserForm({...editUserForm, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
-                  <select
-                    value={editUserForm.role}
-                    onChange={(e) => setEditUserForm({...editUserForm, role: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="user">Benutzer</option>
-                    <option value="admin">Administrator</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
-                  <select
-                    value={editUserForm.subscription}
-                    onChange={(e) => setEditUserForm({...editUserForm, subscription: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="free">Free</option>
-                    <option value="basic">Basic</option>
-                    <option value="premium">Premium</option>
-                    <option value="enterprise">Enterprise</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={() => {
-                    setShowEditUserModal(false);
-                    setEditingUser(null);
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Abbrechen
-                </button>
-                <button
-                  onClick={handleUpdateUser}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Änderungen speichern
-                </button>
-              </div>
+            
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowEditUserModal(false);
+                  setEditingUser(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={handleUpdateUser}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Änderungen speichern
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Subscription Dialog */}
-        {showSubscriptionDialog && selectedUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Subscription ändern für: {selectedUser.username}
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">Subscription für {selectedUser.username} ändern</p>
-              
-              <div className="space-y-3 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Aktuelle Subscription</label>
-                  <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
-                    {(selectedUser.subscription || 'free').charAt(0).toUpperCase() + (selectedUser.subscription || 'free').slice(1)}
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Neue Subscription wählen</label>
-                  <div className="space-y-2">
-                    {[
-                      { value: 'free', label: 'Free - 10 Posts pro Monat', color: 'bg-gray-50 hover:bg-gray-100' },
-                      { value: 'basic', label: 'Basic - 50 Posts pro Monat', color: 'bg-green-50 hover:bg-green-100' },
-                      { value: 'premium', label: 'Premium - 200 Posts pro Monat', color: 'bg-purple-50 hover:bg-purple-100' },
-                      { value: 'enterprise', label: 'Enterprise - 1000 Posts pro Monat', color: 'bg-orange-50 hover:bg-orange-100' }
-                    ].map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => updateSubscription(selectedUser.id, option.value)}
-                        className={`w-full text-left p-3 rounded-lg border border-gray-200 transition-colors ${option.color}`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
+      {/* Subscription Dialog */}
+      {showSubscriptionDialog && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Subscription ändern für: {selectedUser.username}
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">Subscription für {selectedUser.username} ändern</p>
+            
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Aktuelle Subscription</label>
+                <div className="text-sm text-gray-900 bg-gray-50 p-2 rounded">
+                  {(selectedUser.subscription || 'free').charAt(0).toUpperCase() + (selectedUser.subscription || 'free').slice(1)}
                 </div>
               </div>
               
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowSubscriptionDialog(false);
-                    setSelectedUser(null);
-                  }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Abbrechen
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Neue Subscription wählen</label>
+                <div className="space-y-2">
+                  {[
+                    { value: 'free', label: 'Free - 10 Posts pro Monat', color: 'bg-gray-50 hover:bg-gray-100' },
+                    { value: 'basic', label: 'Basic - 50 Posts pro Monat', color: 'bg-green-50 hover:bg-green-100' },
+                    { value: 'premium', label: 'Premium - 200 Posts pro Monat', color: 'bg-purple-50 hover:bg-purple-100' },
+                    { value: 'enterprise', label: 'Enterprise - 1000 Posts pro Monat', color: 'bg-orange-50 hover:bg-orange-100' }
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => updateSubscription(selectedUser.id, option.value)}
+                      className={`w-full text-left p-3 rounded-lg border border-gray-200 transition-colors ${option.color}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowSubscriptionDialog(false);
+                  setSelectedUser(null);
+                }}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Abbrechen
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
