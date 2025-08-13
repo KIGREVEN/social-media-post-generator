@@ -93,7 +93,7 @@ def debug_generate_post():
         db.session.add(post)
         
         # Update usage tracking
-        post_usage.increment_posts_generated()
+        post_usage.increment_generated()
         
         db.session.commit()
         
