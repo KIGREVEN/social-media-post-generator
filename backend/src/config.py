@@ -6,10 +6,21 @@ load_dotenv()
 
 class Config:
     """Base configuration class."""
-    # Synchronisiere JWT und SECRET Keys für konsistente Token-Verarbeitung
-    _secret_key = os.environ.get('SECRET_KEY') or os.environ.get('JWT_SECRET_KEY') or 'social-media-post-generator-secret-key-2025'
-    SECRET_KEY = _secret_key
-    JWT_SECRET_KEY = _secret_key  # Stelle sicher, dass beide identisch sind
+    # Use JWT_SECRET_KEY as primary, fallback to SECRET_KEY, then default
+    # This ensures consistency with the environment variables
+    _jwt_secret = os.environ.get('JWT_SECRET_KEY')
+    _secret_key = os.environ.get('SECRET_KEY')
+    
+    # Priority: JWT_SECRET_KEY > SECRET_KEY > default
+    if _jwt_secret:
+        SECRET_KEY = _jwt_secret
+        JWT_SECRET_KEY = _jwt_secret
+    elif _secret_key:
+        SECRET_KEY = _secret_key
+        JWT_SECRET_KEY = _secret_key
+    else:
+        SECRET_KEY = 'social-media-post-generator-secret-key-2025'
+        JWT_SECRET_KEY = 'social-media-post-generator-secret-key-2025'
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
