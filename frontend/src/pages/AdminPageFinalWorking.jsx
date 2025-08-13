@@ -851,7 +851,8 @@ const AdminPageFinalWorking = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Subscription ändern für: {selectedUser.username}
-            </h3>me="text-sm text-gray-600 mb-4">Subscription für {selectedUser.username} ändern</p>
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">Subscription für {selectedUser.username} ändern</p>
             
             <div className="space-y-3 mb-6">
               <div>
