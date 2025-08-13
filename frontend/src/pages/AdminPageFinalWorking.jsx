@@ -346,7 +346,13 @@ const AdminPageFinalWorking = () => {
                     <h2 className="text-lg font-semibold text-gray-900">Benutzerverwaltung</h2>
                     <p className="text-sm text-gray-600">Verwalten Sie alle Benutzer des Systems</p>
                   </div>
-                  <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                  <button 
+                    onClick={() => {
+                      addDebugLog('Benutzer erstellen Button geklickt');
+                      alert('Benutzer erstellen Funktion wird implementiert...');
+                    }}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  >
                     ➕ Benutzer erstellen
                   </button>
                 </div>
@@ -423,12 +429,22 @@ const AdminPageFinalWorking = () => {
                                 💳 Subscription
                               </button>
                               <button
+                                onClick={() => {
+                                  addDebugLog(`Bearbeiten Button geklickt für: ${user.username}`);
+                                  alert(`Bearbeiten Funktion für ${user.username} wird implementiert...`);
+                                }}
                                 className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-2 py-1 rounded transition-colors"
                                 title="Bearbeiten"
                               >
                                 ✏️
                               </button>
                               <button
+                                onClick={() => {
+                                  addDebugLog(`Löschen Button geklickt für: ${user.username}`);
+                                  if (confirm(`Sind Sie sicher, dass Sie ${user.username} löschen möchten?`)) {
+                                    alert(`Löschen Funktion für ${user.username} wird implementiert...`);
+                                  }
+                                }}
                                 className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-2 py-1 rounded transition-colors"
                                 title="Löschen"
                               >
