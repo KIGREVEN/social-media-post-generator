@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 import pytz
 from src.services.scheduler_service import SchedulerService
@@ -12,9 +13,13 @@ scheduler_bp = Blueprint('scheduler', __name__)
 scheduler_service = SchedulerService()
 
 @scheduler_bp.route('/schedule', methods=['POST'])
+@jwt_required()
 def schedule_post():
     """Schedule a post for future publishing."""
     try:
+        # Get the real current user from JWT token (convert string to int)
+        user_id = int(get_jwt_identity())
+        
         data = request.get_json()
         
         # Validate required fields
@@ -22,9 +27,6 @@ def schedule_post():
         for field in required_fields:
             if field not in data:
                 return jsonify({'error': f'Missing required field: {field}'}), 400
-        
-        # Get user ID (in a real app, this would come from JWT token)
-        user_id = data.get('user_id', 1)  # Default to user 1 for now
         
         # Parse scheduled datetime
         try:
@@ -80,15 +82,17 @@ def schedule_post():
         return jsonify({'error': 'Internal server error'}), 500
 
 @scheduler_bp.route('/scheduled', methods=['GET'])
+@jwt_required()
 def get_scheduled_posts():
     """Get all scheduled posts for the user."""
     try:
+        # Get the real current user from JWT token (convert string to int)
+        user_id = int(get_jwt_identity())
+        
         # Automatically check for posts to publish when user views scheduled posts
         simple_scheduler = get_simple_scheduler()
         simple_scheduler.check_and_process()
         
-        # Get user ID (in a real app, this would come from JWT token)
-        user_id = request.args.get('user_id', 1, type=int)
         status = request.args.get('status')  # Optional status filter
         
         scheduled_posts = scheduler_service.get_scheduled_posts(user_id, status)

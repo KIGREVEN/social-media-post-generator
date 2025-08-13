@@ -59,8 +59,7 @@ const Scheduler = () => {
       }
 
       await schedulerApi.schedulePost({
-        ...scheduleForm,
-        user_id: 1 // Default user ID
+        ...scheduleForm
       });
 
       setSuccess('Post erfolgreich geplant!');

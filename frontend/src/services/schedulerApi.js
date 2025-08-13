@@ -1,14 +1,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://social-media-post-generator-backend.onrender.com';
 
+// Helper function to get JWT token
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+};
+
 export const schedulerApi = {
   // Schedule a new post
   schedulePost: async (postData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/scheduler/schedule`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(postData),
       });
 
@@ -29,9 +36,7 @@ export const schedulerApi = {
     try {
       const response = await fetch(`${API_BASE_URL}/api/scheduler/schedule-existing`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(postData),
       });
 
@@ -50,16 +55,14 @@ export const schedulerApi = {
   // Get all scheduled posts
   getScheduledPosts: async (status = null) => {
     try {
-      let url = `${API_BASE_URL}/api/scheduler/scheduled?user_id=1`;
+      let url = `${API_BASE_URL}/api/scheduler/scheduled`;
       if (status) {
-        url += `&status=${status}`;
+        url += `?status=${status}`;
       }
 
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -77,11 +80,9 @@ export const schedulerApi = {
   // Cancel a scheduled post
   cancelScheduledPost: async (postId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/scheduler/scheduled/${postId}?user_id=1`, {
+      const response = await fetch(`${API_BASE_URL}/api/scheduler/scheduled/${postId}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
@@ -101,9 +102,7 @@ export const schedulerApi = {
     try {
       const response = await fetch(`${API_BASE_URL}/api/scheduler/scheduled/${postId}/reschedule`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(newScheduleData),
       });
 
@@ -124,9 +123,7 @@ export const schedulerApi = {
     try {
       const response = await fetch(`${API_BASE_URL}/api/scheduler/process`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
