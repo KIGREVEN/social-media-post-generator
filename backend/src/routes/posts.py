@@ -12,8 +12,8 @@ posts_bp = Blueprint('posts', __name__)
 def generate_post():
     """Generate a social media post using AI."""
     try:
-        # Get the real current user from JWT token
-        current_user_id = get_jwt_identity()
+        # Get the real current user from JWT token (convert string to int)
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -141,8 +141,8 @@ def generate_post():
 def get_posts():
     """Get user's posts."""
     try:
-        # Get the real current user from JWT token
-        current_user_id = get_jwt_identity()
+        # Get the real current user from JWT token (convert string to int)
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -171,8 +171,8 @@ def get_posts():
 def get_post(post_id):
     """Get a specific post."""
     try:
-        # Get the real current user from JWT token
-        current_user_id = get_jwt_identity()
+        # Get the real current user from JWT token (convert string to int)
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -193,8 +193,8 @@ def get_post(post_id):
 def update_post(post_id):
     """Update a post."""
     try:
-        # Get the real current user from JWT token
-        current_user_id = get_jwt_identity()
+        # Get the real current user from JWT token (convert string to int)
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -234,8 +234,8 @@ def update_post(post_id):
 def delete_post(post_id):
     """Delete a post."""
     try:
-        # Get the real current user from JWT token
-        current_user_id = get_jwt_identity()
+        # Get the real current user from JWT token (convert string to int)
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:
@@ -260,8 +260,8 @@ def delete_post(post_id):
 def publish_post(post_id):
     """Publish a post to social media."""
     try:
-        # Get the real current user from JWT token
-        current_user_id = get_jwt_identity()
+        # Get the real current user from JWT token (convert string to int)
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:

@@ -27,8 +27,8 @@ def debug_test_logging():
 def get_user_social_accounts():
     """Get all social media accounts for the current user."""
     try:
-        # Get the real current user from JWT token
-        current_user_id = get_jwt_identity()
+        # Get the real current user from JWT token (convert string to int)
+        current_user_id = int(get_jwt_identity())
         user = User.query.get(current_user_id)
         
         if not user:

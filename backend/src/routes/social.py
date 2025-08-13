@@ -10,7 +10,7 @@ social_bp = Blueprint('social', __name__)
 def get_connected_accounts():
     """Get user's connected social media accounts."""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         social_accounts = SocialAccount.query.filter_by(
             user_id=current_user_id, is_active=True
@@ -35,7 +35,7 @@ def get_connected_accounts():
 def connect_account(platform):
     """Initiate OAuth flow for connecting a social media account."""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Unsupported platform'}), 400
@@ -121,7 +121,7 @@ def oauth_callback(platform):
 def disconnect_account(platform):
     """Disconnect a social media account."""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Unsupported platform'}), 400
@@ -154,7 +154,7 @@ def disconnect_account(platform):
 def publish_to_platform():
     """Publish content to a specific social media platform."""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         data = request.get_json()
         
         platform = data.get('platform')
@@ -239,7 +239,7 @@ def get_supported_platforms():
 def get_account_status(platform):
     """Get connection status for a specific platform."""
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Unsupported platform'}), 400
