@@ -349,10 +349,10 @@ const PostsPage = () => {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Meine Posts
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 dark:text-gray-300 mt-2">
           Verwalten Sie alle Ihre erstellten Social Media Posts
         </p>
       </div>
@@ -447,17 +447,17 @@ const PostsPage = () => {
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Lade Posts...</p>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">Lade Posts...</p>
             </div>
           ) : posts.length === 0 ? (
             <div className="text-center py-8">
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">Keine Posts gefunden</p>
+              <p className="text-gray-600 dark:text-gray-400">Keine Posts gefunden</p>
             </div>
           ) : (
             <div className="space-y-4">
               {posts.map(post => (
-                <div key={post.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                <div key={post.id} className="border dark:border-gray-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
@@ -479,15 +479,15 @@ const PostsPage = () => {
                         )}
                       </div>
                       
-                      <h3 className="font-semibold text-gray-900 mb-2">
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
                         {post.title || post.post_theme || 'Untitled Post'}
                       </h3>
                       
-                      <p className="text-gray-600 text-sm mb-2">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
                         {truncateText(post.content)}
                       </p>
                       
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Erstellt: {formatDate(post.created_at)}
                         {post.posted_at && (
                           <span> • Veröffentlicht: {formatDate(post.posted_at)}</span>

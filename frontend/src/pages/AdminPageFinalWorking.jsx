@@ -335,10 +335,10 @@ const AdminPageFinalWorking = () => {
 
   if (!user || user.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Zugriff verweigert</h1>
-          <p className="text-gray-600">Sie haben keine Berechtigung für diesen Bereich.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Zugriff verweigert</h1>
+          <p className="text-gray-600 dark:text-gray-300">Sie haben keine Berechtigung für diesen Bereich.</p>
         </div>
       </div>
     );
@@ -347,14 +347,14 @@ const AdminPageFinalWorking = () => {
   const subscriptionStats = getSubscriptionStats();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600 mt-1">Verwalten Sie Benutzer und Subscriptions</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">Verwalten Sie Benutzer und Subscriptions</p>
             </div>
             <button
               onClick={fetchUsers}
@@ -367,109 +367,109 @@ const AdminPageFinalWorking = () => {
 
         {/* Statistiken */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-semibold">👥</span>
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 dark:text-blue-400 font-semibold">👥</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Benutzer gesamt</p>
-                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-                <p className="text-xs text-gray-500">{users.filter(u => u.is_active).length} aktiv, {users.filter(u => u.role === 'admin').length} Admins</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Benutzer gesamt</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{users.length}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{users.filter(u => u.is_active).length} aktiv, {users.filter(u => u.role === 'admin').length} Admins</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="text-purple-600 font-semibold">💎</span>
+                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 dark:text-purple-400 font-semibold">💎</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Premium/Enterprise</p>
-                <p className="text-2xl font-bold text-gray-900">{subscriptionStats.premium + subscriptionStats.enterprise}</p>
-                <p className="text-xs text-gray-500">Premium/Enterprise Benutzer</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Premium/Enterprise</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{subscriptionStats.premium + subscriptionStats.enterprise}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Premium/Enterprise Benutzer</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-semibold">📊</span>
+                <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 dark:text-green-400 font-semibold">📊</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Posts gesamt</p>
-                <p className="text-2xl font-bold text-gray-900">0</p>
-                <p className="text-xs text-gray-500">0 veröffentlicht</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Posts gesamt</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">0</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">0 veröffentlicht</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-semibold">⚡</span>
+                <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
+                  <span className="text-green-600 dark:text-green-400 font-semibold">⚡</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">System Status</p>
-                <p className="text-2xl font-bold text-green-600">Online</p>
-                <p className="text-xs text-gray-500">Alle Services verfügbar</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">System Status</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">Online</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Alle Services verfügbar</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Subscription-Übersicht */}
-        <div className="bg-white rounded-lg shadow mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">📊 Subscription-Übersicht</h2>
-            <p className="text-sm text-gray-600">Verteilung der Subscription-Typen</p>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">📊 Subscription-Übersicht</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Verteilung der Subscription-Typen</p>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">Free</div>
-                <div className="text-3xl font-bold text-blue-600">{subscriptionStats.free}</div>
-                <div className="text-sm text-gray-500">10 Posts pro Monat</div>
+                <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">Free</div>
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{subscriptionStats.free}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">10 Posts pro Monat</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">Basic</div>
-                <div className="text-3xl font-bold text-green-600">{subscriptionStats.basic}</div>
-                <div className="text-sm text-gray-500">50 Posts pro Monat</div>
+                <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">Basic</div>
+                <div className="text-3xl font-bold text-green-600 dark:text-green-400">{subscriptionStats.basic}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">50 Posts pro Monat</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">Premium</div>
-                <div className="text-3xl font-bold text-purple-600">{subscriptionStats.premium}</div>
-                <div className="text-sm text-gray-500">200 Posts pro Monat</div>
+                <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">Premium</div>
+                <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{subscriptionStats.premium}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">200 Posts pro Monat</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">Enterprise</div>
-                <div className="text-3xl font-bold text-orange-600">{subscriptionStats.enterprise}</div>
-                <div className="text-sm text-gray-500">1000 Posts pro Monat</div>
+                <div className="text-2xl font-bold text-gray-600 dark:text-gray-300">Enterprise</div>
+                <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">{subscriptionStats.enterprise}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">1000 Posts pro Monat</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="-mb-px flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab('users')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'users'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 👥 Benutzerverwaltung
@@ -478,8 +478,8 @@ const AdminPageFinalWorking = () => {
                 onClick={() => setActiveTab('subscriptions')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'subscriptions'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 💎 Subscription-Management
@@ -488,8 +488,8 @@ const AdminPageFinalWorking = () => {
                 onClick={() => setActiveTab('debug')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === 'debug'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 🔧 Debug-Informationen
@@ -502,8 +502,8 @@ const AdminPageFinalWorking = () => {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Benutzerverwaltung</h2>
-                    <p className="text-sm text-gray-600">Verwalten Sie alle Benutzer des Systems</p>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Benutzerverwaltung</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">Verwalten Sie alle Benutzer des Systems</p>
                   </div>
                   <button 
                     onClick={() => {
@@ -519,11 +519,11 @@ const AdminPageFinalWorking = () => {
                 {loading ? (
                   <div className="text-center py-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="text-gray-600 mt-2">Lade Benutzer...</p>
+                    <p className="text-gray-600 dark:text-gray-400 mt-2">Lade Benutzer...</p>
                   </div>
                 ) : error ? (
                   <div className="text-center py-8">
-                    <p className="text-red-600">{error}</p>
+                    <p className="text-red-600 dark:text-red-400">{error}</p>
                     <button
                       onClick={fetchUsers}
                       className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -533,23 +533,23 @@ const AdminPageFinalWorking = () => {
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                      <thead className="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Benutzername</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-Mail</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rolle</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Erstellt</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Benutzername</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">E-Mail</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rolle</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Subscription</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Erstellt</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Aktionen</th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
+                      <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         {users.map((user) => (
-                          <tr key={user.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.username}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                          <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{user.username}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{user.email}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                                 user.role === 'admin' 
@@ -576,7 +576,7 @@ const AdminPageFinalWorking = () => {
                                 {user.is_active ? 'Aktiv' : 'Inaktiv'}
                               </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                               {user.created_at ? new Date(user.created_at).toLocaleDateString('de-DE') : 'N/A'}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">

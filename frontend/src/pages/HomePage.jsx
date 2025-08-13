@@ -52,11 +52,11 @@ const HomePage = () => {
       {/* Hero Section */}
       <section className="text-center space-y-8">
         <div className="space-y-4">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white">
             Social Media Posts
-            <span className="text-blue-600"> automatisch generieren</span>
+            <span className="text-blue-600 dark:text-orange-500"> automatisch generieren</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Erstelle professionelle Social Media Inhalte mit KI-Unterstützung. 
             Analysiere Websites, generiere Posts und veröffentliche direkt auf allen Plattformen.
           </p>
@@ -103,25 +103,25 @@ const HomePage = () => {
       {/* Features Section */}
       <section className="space-y-8">
         <div className="text-center space-y-4">
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             Leistungsstarke Features
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Alles was du brauchst, um professionelle Social Media Posts zu erstellen und zu verwalten.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
-            <Card key={index} className="text-center">
+            <Card key={index} className="text-center card-greven">
               <CardHeader>
                 <div className="flex justify-center mb-4">
                   {feature.icon}
                 </div>
-                <CardTitle className="text-lg">{feature.title}</CardTitle>
+                <CardTitle className="text-lg dark:text-white">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>{feature.description}</CardDescription>
+                <CardDescription className="dark:text-gray-300">{feature.description}</CardDescription>
               </CardContent>
             </Card>
           ))}
@@ -129,13 +129,13 @@ const HomePage = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="bg-white rounded-lg p-8 shadow-sm">
+      <section className="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-300">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-900">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
               Warum unser Tool verwenden?
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-gray-600 dark:text-gray-300">
               Spare Zeit und erstelle konsistent hochwertige Social Media Inhalte 
               mit unserer KI-gestützten Plattform.
             </p>
@@ -143,23 +143,23 @@ const HomePage = () => {
               {benefits.map((benefit, index) => (
                 <li key={index} className="flex items-center space-x-3">
                   <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <span className="text-gray-700">{benefit}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{benefit}</span>
                 </li>
               ))}
             </ul>
           </div>
           
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-8">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600 rounded-lg p-8">
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-gray-900">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 Bereit loszulegen?
               </h3>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Erstelle deinen ersten professionellen Social Media Post in wenigen Minuten.
               </p>
               {!user && (
                 <Link to="/register">
-                  <Button className="w-full">
+                  <Button className="w-full btn-greven">
                     Jetzt kostenlos registrieren
                   </Button>
                 </Link>
@@ -172,41 +172,41 @@ const HomePage = () => {
       {/* How it Works Section */}
       <section className="space-y-8">
         <div className="text-center space-y-4">
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             So funktioniert es
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             In nur wenigen Schritten zu professionellen Social Media Posts.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center space-y-4">
-            <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+            <div className="w-12 h-12 bg-primary-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">
               1
             </div>
-            <h3 className="text-xl font-semibold">Website analysieren</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold dark:text-white">Website analysieren</h3>
+            <p className="text-gray-600 dark:text-gray-300">
               Gib die URL der Website ein, die du bewerben möchtest
             </p>
           </div>
           
           <div className="text-center space-y-4">
-            <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+            <div className="w-12 h-12 bg-primary-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">
               2
             </div>
-            <h3 className="text-xl font-semibold">Post generieren</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold dark:text-white">Post generieren</h3>
+            <p className="text-gray-600 dark:text-gray-300">
               KI erstellt automatisch professionelle Inhalte basierend auf deinem Thema
             </p>
           </div>
           
           <div className="text-center space-y-4">
-            <div className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">
+            <div className="w-12 h-12 bg-primary-500 text-white rounded-full flex items-center justify-center mx-auto text-xl font-bold">
               3
             </div>
-            <h3 className="text-xl font-semibold">Veröffentlichen</h3>
-            <p className="text-gray-600">
+            <h3 className="text-xl font-semibold dark:text-white">Veröffentlichen</h3>
+            <p className="text-gray-600 dark:text-gray-300">
               Poste direkt auf LinkedIn, Facebook, Twitter oder Instagram
             </p>
           </div>

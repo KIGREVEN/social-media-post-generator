@@ -162,10 +162,10 @@ const PostGeneratorPage = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Post Generator
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-gray-600 dark:text-gray-300 mt-2">
           Erstellen Sie professionelle Social Media Posts mit KI-Unterstützung
         </p>
       </div>
@@ -199,7 +199,7 @@ const PostGeneratorPage = () => {
                 value={formData.profile_url}
                 onChange={(e) => handleChange('profile_url', e.target.value)}
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Die Website, die Sie bewerben möchten
               </p>
             </div>
@@ -212,7 +212,7 @@ const PostGeneratorPage = () => {
                 value={formData.post_theme}
                 onChange={(e) => handleChange('post_theme', e.target.value)}
               />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Das Hauptthema oder der Fokus Ihres Posts
               </p>
             </div>
@@ -298,7 +298,7 @@ const PostGeneratorPage = () => {
                   <Badge variant="secondary" className="capitalize">
                     {generatedPost.platform}
                   </Badge>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     {new Date(generatedPost.created_at).toLocaleDateString('de-DE')}
                   </div>
                 </div>
@@ -310,7 +310,7 @@ const PostGeneratorPage = () => {
                     <img 
                       src={generatedPost.generated_image_url} 
                       alt="Generated content" 
-                      className="w-full rounded-lg border"
+                      className="w-full rounded-lg border dark:border-gray-600"
                     />
                   </div>
                 )}
@@ -318,8 +318,8 @@ const PostGeneratorPage = () => {
                 {/* Post Content */}
                 <div className="space-y-2">
                   <Label>Post-Inhalt</Label>
-                  <div className="bg-gray-50 p-4 rounded-lg border">
-                    <p className="whitespace-pre-wrap text-sm">
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-600">
+                    <p className="whitespace-pre-wrap text-sm dark:text-gray-200">
                       {generatedPost.content}
                     </p>
                   </div>
@@ -343,7 +343,7 @@ const PostGeneratorPage = () => {
                     </TabsList>
                     
                     <TabsContent value="publish" className="space-y-2">
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                         Veröffentlichen Sie direkt auf Ihren verbundenen Social Media Accounts
                       </p>
                       {platforms.map((platform) => (
@@ -360,11 +360,11 @@ const PostGeneratorPage = () => {
                     </TabsContent>
                     
                     <TabsContent value="save" className="space-y-2">
-                      <div className="flex items-center space-x-2 text-green-600">
+                      <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
                         <CheckCircle className="w-4 h-4" />
                         <span className="text-sm">Post wurde automatisch gespeichert</span>
                       </div>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         Sie finden diesen Post in Ihrer Post-Übersicht unter "Meine Posts"
                       </p>
                     </TabsContent>
@@ -389,16 +389,16 @@ const PostGeneratorPage = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <h4 className="font-medium mb-2">Website URL</h4>
-              <ul className="space-y-1 text-gray-600">
+              <h4 className="font-medium mb-2 dark:text-white">Website URL</h4>
+              <ul className="space-y-1 text-gray-600 dark:text-gray-400">
                 <li>• Verwenden Sie die Haupt-URL der Website</li>
                 <li>• Stellen Sie sicher, dass die Website öffentlich zugänglich ist</li>
                 <li>• Vermeiden Sie Login-geschützte Seiten</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium mb-2">Post-Thema</h4>
-              <ul className="space-y-1 text-gray-600">
+              <h4 className="font-medium mb-2 dark:text-white">Post-Thema</h4>
+              <ul className="space-y-1 text-gray-600 dark:text-gray-400">
                 <li>• Seien Sie spezifisch und klar</li>
                 <li>• Verwenden Sie relevante Keywords</li>
                 <li>• Denken Sie an Ihre Zielgruppe</li>
