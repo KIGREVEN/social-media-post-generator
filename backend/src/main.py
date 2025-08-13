@@ -200,9 +200,17 @@ def create_app(config_name=None):
         return jsonify({'status': 'healthy', 'message': 'Social Media Post Generator API is running'}), 200
     
     # Simple scheduler endpoints with lazy loading
-    @app.route('/api/scheduler/scheduled', methods=['GET'])
+    @app.route('/api/scheduler/scheduled', methods=['GET', 'OPTIONS'])
     def get_scheduled_posts():
         """Get scheduled posts with lazy service loading."""
+        if request.method == 'OPTIONS':
+            # Handle CORS preflight request
+            response = jsonify({'status': 'ok'})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+            response.headers.add('Access-Control-Allow-Methods', 'GET,OPTIONS')
+            return response
+            
         try:
             from src.services.scheduler_service import SchedulerService
             from src.services.background_scheduler import get_simple_scheduler
@@ -225,9 +233,16 @@ def create_app(config_name=None):
         except Exception as e:
             return jsonify({'error': f'Error getting scheduled posts: {str(e)}'}), 500
     
-    @app.route('/api/scheduler/schedule', methods=['POST'])
+    @app.route('/api/scheduler/schedule', methods=['POST', 'OPTIONS'])
     def schedule_post():
         """Schedule a post with lazy service loading."""
+        if request.method == 'OPTIONS':
+            # Handle CORS preflight request
+            response = jsonify({'status': 'ok'})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+            response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+            return response
         try:
             from src.services.scheduler_service import SchedulerService
             from datetime import datetime
@@ -293,29 +308,18 @@ def create_app(config_name=None):
                 
         except Exception as e:
             return jsonify({'error': f'Error scheduling post: {str(e)}'}), 500
-    
-    # Run database migration on first request
-    migration_done = False
-    
-    @app.before_request
-    def run_migration_once():
-        nonlocal migration_done
-        if not migration_done:
-            with app.app_context():
-                run_database_migration()
-                migration_done = True
-    
-    return app
 
-app = create_app()
-
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
-
-    @app.route('/api/scheduler/schedule-existing', methods=['POST'])
+    @app.route('/api/scheduler/schedule-existing', methods=['POST', 'OPTIONS'])
     def schedule_existing_post():
         """Schedule an existing post with lazy service loading."""
+        if request.method == 'OPTIONS':
+            # Handle CORS preflight request
+            response = jsonify({'status': 'ok'})
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+            response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
+            return response
+            
         try:
             from src.services.scheduler_service import SchedulerService
             from src.models import Post
@@ -388,4 +392,23 @@ if __name__ == '__main__':
                 
         except Exception as e:
             return jsonify({'error': f'Error scheduling existing post: {str(e)}'}), 500
+    
+    # Run database migration on first request
+    migration_done = False
+    
+    @app.before_request
+    def run_migration_once():
+        nonlocal migration_done
+        if not migration_done:
+            with app.app_context():
+                run_database_migration()
+                migration_done = True
+    
+    return app
+
+app = create_app()
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
 
