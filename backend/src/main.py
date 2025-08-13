@@ -312,3 +312,80 @@ app = create_app()
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
+    @app.route('/api/scheduler/schedule-existing', methods=['POST'])
+    def schedule_existing_post():
+        """Schedule an existing post with lazy service loading."""
+        try:
+            from src.services.scheduler_service import SchedulerService
+            from src.models import Post
+            from datetime import datetime
+            import pytz
+            
+            data = request.get_json()
+            
+            # Validate required fields
+            required_fields = ['post_id', 'platform', 'scheduled_date', 'scheduled_time']
+            for field in required_fields:
+                if field not in data:
+                    return jsonify({'error': f'Missing required field: {field}'}), 400
+            
+            # Get the existing post
+            post = Post.query.get(data['post_id'])
+            if not post:
+                return jsonify({'error': 'Post not found'}), 404
+            
+            # Parse scheduled datetime
+            try:
+                scheduled_date = data['scheduled_date']
+                scheduled_time = data['scheduled_time']
+                timezone = data.get('timezone', 'UTC')
+                
+                datetime_str = f"{scheduled_date} {scheduled_time}"
+                scheduled_datetime = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
+                
+                # Validate future time
+                current_time = datetime.utcnow()
+                if timezone != 'UTC':
+                    user_tz = pytz.timezone(timezone)
+                    current_time = pytz.UTC.localize(current_time).astimezone(user_tz).replace(tzinfo=None)
+                
+                if scheduled_datetime <= current_time:
+                    return jsonify({'error': 'Scheduled time must be in the future'}), 400
+                    
+            except ValueError as e:
+                return jsonify({'error': f'Invalid date/time format: {str(e)}'}), 400
+            except pytz.exceptions.UnknownTimeZoneError:
+                return jsonify({'error': 'Invalid timezone'}), 400
+            
+            # Schedule the existing post
+            scheduler_service = SchedulerService()
+            user_id = data.get('user_id', 1)
+            
+            # Use existing post content
+            post_content = {
+                'title': post.title or '',
+                'content': post.content,
+                'image_url': post.generated_image_url or ''
+            }
+            
+            scheduled_post = scheduler_service.schedule_post(
+                user_id=user_id,
+                post_content=post_content,
+                platform=data['platform'],
+                scheduled_time=scheduled_datetime,
+                timezone=timezone,
+                post_id=post.id
+            )
+            
+            if scheduled_post:
+                return jsonify({
+                    'message': 'Post scheduled successfully',
+                    'scheduled_post': scheduled_post.to_dict()
+                }), 201
+            else:
+                return jsonify({'error': 'Failed to schedule post'}), 500
+                
+        except Exception as e:
+            return jsonify({'error': f'Error scheduling existing post: {str(e)}'}), 500
+

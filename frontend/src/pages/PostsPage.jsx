@@ -33,9 +33,17 @@ const PostsPage = () => {
   const [selectedPost, setSelectedPost] = useState(null)
   const [showPostModal, setShowPostModal] = useState(false)
   const [showPublishModal, setShowPublishModal] = useState(false)
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [selectedPlatforms, setSelectedPlatforms] = useState([])
   const [publishing, setPublishing] = useState(false)
+  const [scheduling, setScheduling] = useState(false)
   const [connectedAccounts, setConnectedAccounts] = useState([])
+  const [scheduleForm, setScheduleForm] = useState({
+    platform: 'linkedin',
+    scheduled_date: '',
+    scheduled_time: '',
+    timezone: 'Europe/Berlin'
+  })
 
   const platforms = [
     { value: '', label: 'Alle Plattformen' },
@@ -162,6 +170,17 @@ const PostsPage = () => {
     setShowPublishModal(true)
   }
 
+  const handleSchedulePost = (post) => {
+    setSelectedPost(post)
+    setScheduleForm({
+      platform: 'linkedin',
+      scheduled_date: '',
+      scheduled_time: '',
+      timezone: 'Europe/Berlin'
+    })
+    setShowScheduleModal(true)
+  }
+
   const handlePublish = async () => {
     if (selectedPlatforms.length === 0) {
       toast.error('Bitte wählen Sie mindestens eine Plattform aus')
@@ -197,6 +216,74 @@ const PostsPage = () => {
     } finally {
       setPublishing(false)
     }
+  }
+
+  const handleScheduleSubmit = async () => {
+    // Validate form
+    if (!scheduleForm.scheduled_date || !scheduleForm.scheduled_time) {
+      toast.error('Bitte füllen Sie alle erforderlichen Felder aus')
+      return
+    }
+
+    // Check if scheduled time is in the future
+    const scheduledDateTime = new Date(`${scheduleForm.scheduled_date}T${scheduleForm.scheduled_time}`)
+    const now = new Date()
+    
+    if (scheduledDateTime <= now) {
+      toast.error('Der geplante Zeitpunkt muss in der Zukunft liegen')
+      return
+    }
+
+    try {
+      setScheduling(true)
+      
+      const response = await fetch(`${API_BASE_URL}/api/scheduler/schedule-existing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          post_id: selectedPost.id,
+          platform: scheduleForm.platform,
+          scheduled_date: scheduleForm.scheduled_date,
+          scheduled_time: scheduleForm.scheduled_time,
+          timezone: scheduleForm.timezone,
+          user_id: 1
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('Post erfolgreich geplant!')
+        setShowScheduleModal(false)
+        // Optionally refresh posts or show scheduled posts
+      } else {
+        toast.error(data.error || 'Fehler beim Planen des Posts')
+      }
+    } catch (error) {
+      console.error('Error scheduling post:', error)
+      toast.error('Verbindungsfehler beim Planen des Posts')
+    } finally {
+      setScheduling(false)
+    }
+  }
+
+  // Get minimum date (today) for date input
+  const getMinDate = () => {
+    const today = new Date()
+    return today.toISOString().split('T')[0]
+  }
+
+  // Get minimum time for today
+  const getMinTime = () => {
+    if (scheduleForm.scheduled_date === getMinDate()) {
+      const now = new Date()
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes() + 1).padStart(2, '0') // Add 1 minute buffer
+      return `${hours}:${minutes}`
+    }
+    return '00:00'
   }
 
   const formatDate = (dateString) => {
@@ -371,6 +458,15 @@ const PostsPage = () => {
                         onClick={() => handleViewPost(post)}
                       >
                         <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSchedulePost(post)}
+                        className="text-blue-600 hover:text-blue-700"
+                        title="Post planen"
+                      >
+                        <Calendar className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="outline"
@@ -594,6 +690,121 @@ const PostsPage = () => {
                     variant="outline"
                     onClick={() => setShowPublishModal(false)}
                     disabled={publishing}
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default PostsPage
+
+
+      {/* Schedule Modal */}
+      {showScheduleModal && selectedPost && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-xl font-bold">Post planen</h2>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowScheduleModal(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Post:</h3>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm font-medium">{selectedPost.title || selectedPost.post_theme || 'Untitled Post'}</p>
+                    <p className="text-sm text-gray-600 mt-1">{truncateText(selectedPost.content, 100)}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Plattform</label>
+                  <select
+                    value={scheduleForm.platform}
+                    onChange={(e) => setScheduleForm({...scheduleForm, platform: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="linkedin">LinkedIn</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="twitter">Twitter</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Datum</label>
+                  <input
+                    type="date"
+                    value={scheduleForm.scheduled_date}
+                    onChange={(e) => setScheduleForm({...scheduleForm, scheduled_date: e.target.value})}
+                    min={getMinDate()}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Uhrzeit</label>
+                  <input
+                    type="time"
+                    value={scheduleForm.scheduled_time}
+                    onChange={(e) => setScheduleForm({...scheduleForm, scheduled_time: e.target.value})}
+                    min={getMinTime()}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Zeitzone</label>
+                  <select
+                    value={scheduleForm.timezone}
+                    onChange={(e) => setScheduleForm({...scheduleForm, timezone: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Europe/Berlin">Europa/Berlin (MEZ)</option>
+                    <option value="UTC">UTC</option>
+                    <option value="America/New_York">Amerika/New York (EST)</option>
+                    <option value="America/Los_Angeles">Amerika/Los Angeles (PST)</option>
+                  </select>
+                </div>
+                
+                <div className="flex space-x-2 pt-4">
+                  <Button
+                    onClick={handleScheduleSubmit}
+                    disabled={scheduling || !scheduleForm.scheduled_date || !scheduleForm.scheduled_time}
+                    className="flex-1"
+                  >
+                    {scheduling ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Plane...
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Post planen
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowScheduleModal(false)}
+                    disabled={scheduling}
                   >
                     Abbrechen
                   </Button>
