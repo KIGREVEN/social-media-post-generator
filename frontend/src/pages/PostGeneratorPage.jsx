@@ -65,11 +65,12 @@ const PostGeneratorPage = () => {
       console.log('API_BASE_URL:', API_BASE_URL);
       console.log('Request body:', JSON.stringify(formData, null, 2));
 
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-          // Kein Authorization Header mehr benötigt!
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       });
@@ -118,11 +119,12 @@ const PostGeneratorPage = () => {
     if (!generatedPost) return
 
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/social-accounts/publish`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-          // Removed JWT token dependency - no Authorization header needed
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           post_id: generatedPost.id,

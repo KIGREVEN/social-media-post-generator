@@ -91,10 +91,12 @@ const SimplePostGeneratorPage = () => {
       console.log('Request body:', JSON.stringify(formData, null, 2))
 
       // Try async API first
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/async/generate-async`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData)
       })
@@ -146,10 +148,12 @@ const SimplePostGeneratorPage = () => {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 300000) // 5 minutes timeout
 
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(formData),
         signal: controller.signal,

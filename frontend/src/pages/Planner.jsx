@@ -134,10 +134,12 @@ const Planner = () => {
           
           // Generate post using direct API call
           const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://social-media-post-generator-backend.onrender.com';
+          const token = localStorage.getItem('token')
           const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
               profile_url: '',
