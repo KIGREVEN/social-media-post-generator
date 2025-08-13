@@ -9,34 +9,55 @@ posts_debug_bp = Blueprint('posts_debug', __name__)
 
 def get_session_user_id():
     """Get or create a session-based user ID for debug purposes."""
-    # Use IP address and user agent to create a unique session identifier
-    ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
-    user_agent = request.headers.get('User-Agent', 'unknown')
-    
-    # Create a hash from IP and user agent for session identification
-    session_hash = hashlib.md5(f"{ip_address}_{user_agent}".encode()).hexdigest()[:16]
-    session_username = f"session_{session_hash}"
-    
-    # Try to find existing session user
-    user = User.query.filter_by(username=session_username).first()
-    
-    if not user:
-        # Create a new session user
-        user = User(
-            username=session_username,
-            email=f"{session_username}@session.local",
-            role='user'
-        )
-        user.set_password('session_password')
-        db.session.add(user)
-        db.session.commit()
+    try:
+        # Use IP address and user agent to create a unique session identifier
+        ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+        user_agent = request.headers.get('User-Agent', 'unknown')
         
-        # Create post usage for the new user
-        post_usage = PostUsage(user_id=user.id)
-        db.session.add(post_usage)
-        db.session.commit()
-    
-    return user.id
+        # Create a hash from IP and user agent for session identification
+        session_hash = hashlib.md5(f"{ip_address}_{user_agent}".encode()).hexdigest()[:16]
+        session_username = f"session_{session_hash}"
+        
+        # Try to find existing session user
+        user = User.query.filter_by(username=session_username).first()
+        
+        if not user:
+            # Create a new session user
+            user = User(
+                username=session_username,
+                email=f"{session_username}@session.local",
+                role='user'
+            )
+            user.set_password('session_password')
+            db.session.add(user)
+            db.session.flush()  # Get the user ID without committing
+            
+            # Create post usage for the new user
+            post_usage = PostUsage(user_id=user.id)
+            db.session.add(post_usage)
+            db.session.commit()
+        
+        return user.id
+        
+    except Exception as e:
+        # Fallback: use or create a default debug user
+        print(f"Session user creation failed: {e}")
+        user = User.query.filter_by(username='debug_fallback').first()
+        if not user:
+            user = User(
+                username='debug_fallback',
+                email='debug_fallback@session.local',
+                role='user'
+            )
+            user.set_password('debug123')
+            db.session.add(user)
+            db.session.flush()
+            
+            post_usage = PostUsage(user_id=user.id)
+            db.session.add(post_usage)
+            db.session.commit()
+        
+        return user.id
 
 @posts_debug_bp.route('/generate', methods=['POST', 'OPTIONS'])
 def debug_generate_post():
