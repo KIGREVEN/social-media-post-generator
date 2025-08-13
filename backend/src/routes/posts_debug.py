@@ -1,10 +1,42 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
 from src.models import db, User, Post, PostUsage
 from src.services.openai_service import OpenAIService
 import requests
 from datetime import datetime
+import hashlib
 
 posts_debug_bp = Blueprint('posts_debug', __name__)
+
+def get_session_user_id():
+    """Get or create a session-based user ID for debug purposes."""
+    # Use IP address and user agent to create a unique session identifier
+    ip_address = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', 'unknown'))
+    user_agent = request.headers.get('User-Agent', 'unknown')
+    
+    # Create a hash from IP and user agent for session identification
+    session_hash = hashlib.md5(f"{ip_address}_{user_agent}".encode()).hexdigest()[:16]
+    session_username = f"session_{session_hash}"
+    
+    # Try to find existing session user
+    user = User.query.filter_by(username=session_username).first()
+    
+    if not user:
+        # Create a new session user
+        user = User(
+            username=session_username,
+            email=f"{session_username}@session.local",
+            role='user'
+        )
+        user.set_password('session_password')
+        db.session.add(user)
+        db.session.commit()
+        
+        # Create post usage for the new user
+        post_usage = PostUsage(user_id=user.id)
+        db.session.add(post_usage)
+        db.session.commit()
+    
+    return user.id
 
 @posts_debug_bp.route('/generate', methods=['POST', 'OPTIONS'])
 def debug_generate_post():
@@ -18,16 +50,9 @@ def debug_generate_post():
         return response
         
     try:
-        # Use a default user for debug purposes
-        user = User.query.filter_by(username='admin').first()
-        if not user:
-            # Create a default user if none exists
-            user = User(username='debug_user', email='debug@example.com', role='user')
-            user.set_password('debug123')
-            db.session.add(user)
-            db.session.commit()
-        
-        current_user_id = user.id
+        # Use session-based user identification for proper isolation
+        current_user_id = get_session_user_id()
+        user = User.query.get(current_user_id)
         
         # Check user's post usage limits
         post_usage = PostUsage.query.filter_by(user_id=current_user_id).first()
@@ -122,9 +147,8 @@ def debug_get_posts():
         return response
         
     try:
-        # Use a default user for debug purposes
-        user = User.query.filter_by(username='admin').first()
-        current_user_id = user.id if user else 1
+        # Use session-based user identification for proper isolation
+        current_user_id = get_session_user_id()
         
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
