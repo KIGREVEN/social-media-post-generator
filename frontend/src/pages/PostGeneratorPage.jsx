@@ -65,8 +65,9 @@ const PostGeneratorPage = () => {
       console.log('API_BASE_URL:', API_BASE_URL);
       console.log('Request body:', JSON.stringify(formData, null, 2));
 
+      // Try with JWT token first
       const token = localStorage.getItem('token')
-      const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
+      let response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,6 +78,19 @@ const PostGeneratorPage = () => {
 
       console.log('Response status:', response.status);
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // If JWT token is invalid (422), try debug endpoint without auth
+      if (response.status === 422) {
+        console.log('JWT token invalid, trying debug endpoint...');
+        response = await fetch(`${API_BASE_URL}/api/posts-debug/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+        console.log('Debug endpoint response status:', response.status);
+      }
 
       const data = await response.json();
       console.log('Response data:', data);
