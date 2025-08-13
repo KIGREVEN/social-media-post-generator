@@ -1,149 +1,295 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Import Inter font */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* Base styles */
-@layer base {
-  html {
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-  
-  body {
-    @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300;
-  }
-  
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary-500;
-  }
+html {
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-/* Component styles */
-@layer components {
-  /* Greven branded buttons */
-  .btn-greven {
-    @apply bg-primary-500 hover:bg-primary-600 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 shadow-greven hover:shadow-greven-lg;
-  }
-  
-  .btn-greven-outline {
-    @apply border-2 border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white font-medium px-4 py-2 rounded-lg transition-all duration-200;
-  }
-  
-  .btn-greven-ghost {
-    @apply text-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/20 font-medium px-4 py-2 rounded-lg transition-colors duration-200;
-  }
-  
-  /* Card styles */
-  .card-greven {
-    @apply bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300;
-  }
-  
-  .card-greven:hover {
-    @apply shadow-xl border-primary-200 dark:border-primary-800;
-  }
-  
-  /* Input styles */
-  .input-greven {
-    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200;
-  }
-  
-  /* Navigation styles */
-  .nav-link {
-    @apply text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400 font-medium transition-colors duration-200;
-  }
-  
-  .nav-link-active {
-    @apply text-primary-500 dark:text-primary-400 font-semibold;
-  }
-  
-  /* Header gradient */
-  .header-gradient {
-    @apply bg-gradient-to-r from-primary-500 to-primary-600;
-  }
-  
-  /* Text gradients */
-  .text-gradient-greven {
-    @apply bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent;
-  }
-  
-  /* Loading spinner */
-  .spinner-greven {
-    @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500;
-  }
-  
-  /* Toast notifications */
-  .toast-success {
-    @apply bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200;
-  }
-  
-  .toast-error {
-    @apply bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200;
-  }
-  
-  .toast-warning {
-    @apply bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200;
-  }
-  
-  .toast-info {
-    @apply bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 text-blue-800 dark:text-blue-200;
-  }
+body {
+  background-color: white;
+  color: #111827;
+  transition: background-color 0.3s, color 0.3s;
 }
 
-/* Utility classes */
-@layer utilities {
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  .text-shadow-lg {
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-  
-  /* Animation utilities */
-  .animate-fade-in {
-    animation: fadeIn 0.5s ease-in-out;
-  }
-  
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
-  }
-  
-  /* Focus styles */
-  .focus-greven {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900;
-  }
+.dark body {
+  background-color: #111827;
+  color: #f9fafb;
 }
 
-/* Dark mode specific adjustments */
-.dark {
-  color-scheme: dark;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-/* Custom scrollbar for dark mode */
+::-webkit-scrollbar-track {
+  background-color: #f3f4f6;
+}
+
 .dark ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background-color: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 9999px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background-color: #4b5563;
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #ff6b00;
+::-webkit-scrollbar-thumb:hover {
+  background-color: #FF6B00;
+}
+
+/* Greven branded buttons */
+.btn-greven {
+  background-color: #FF6B00;
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(255, 107, 0, 0.1), 0 2px 4px -1px rgba(255, 107, 0, 0.06);
+}
+
+.btn-greven:hover {
+  background-color: #E55A00;
+  box-shadow: 0 10px 15px -3px rgba(255, 107, 0, 0.1), 0 4px 6px -2px rgba(255, 107, 0, 0.05);
+}
+
+.btn-greven-outline {
+  border: 2px solid #FF6B00;
+  color: #FF6B00;
+  background-color: transparent;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-greven-outline:hover {
+  background-color: #FF6B00;
+  color: white;
+}
+
+.btn-greven-ghost {
+  color: #FF6B00;
+  background-color: transparent;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.btn-greven-ghost:hover {
+  background-color: #fff7ed;
+}
+
+.dark .btn-greven-ghost:hover {
+  background-color: rgba(255, 107, 0, 0.1);
+}
+
+/* Card styles */
+.card-greven {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s;
+}
+
+.dark .card-greven {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.card-greven:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: #fed7aa;
+}
+
+.dark .card-greven:hover {
+  border-color: rgba(255, 107, 0, 0.3);
+}
+
+/* Input styles */
+.input-greven {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  background-color: white;
+  color: #111827;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dark .input-greven {
+  border-color: #4b5563;
+  background-color: #1f2937;
+  color: #f9fafb;
+}
+
+.input-greven:focus {
+  outline: none;
+  border-color: #FF6B00;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+/* Navigation styles */
+.nav-link {
+  color: #4b5563;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.dark .nav-link {
+  color: #d1d5db;
+}
+
+.nav-link:hover {
+  color: #FF6B00;
+}
+
+.dark .nav-link:hover {
+  color: #ff8533;
+}
+
+.nav-link-active {
+  color: #FF6B00;
+  font-weight: 600;
+}
+
+.dark .nav-link-active {
+  color: #ff8533;
+}
+
+/* Text gradients */
+.text-gradient-greven {
+  background: linear-gradient(to right, #FF6B00, #E55A00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Loading spinner */
+.spinner-greven {
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  height: 2rem;
+  width: 2rem;
+  border: 2px solid transparent;
+  border-bottom-color: #FF6B00;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast notifications */
+.toast-success {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.dark .toast-success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #bbf7d0;
+}
+
+.toast-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.dark .toast-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fecaca;
+}
+
+.toast-warning {
+  background-color: #fffbeb;
+  border: 1px solid #fed7aa;
+  color: #d97706;
+}
+
+.dark .toast-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fed7aa;
+}
+
+.toast-info {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #2563eb;
+}
+
+.dark .toast-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #bfdbfe;
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Focus styles */
+.focus-greven:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.1);
+}
+
+.dark .focus-greven:focus {
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2);
+}
+
+/* Text shadow utilities */
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-lg {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode class */
+.dark {
+  color-scheme: dark;
 }
 
