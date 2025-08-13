@@ -699,12 +699,6 @@ const PostsPage = () => {
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-export default PostsPage
-
 
       {/* Schedule Modal */}
       {showScheduleModal && selectedPost && (
@@ -819,5 +813,3 @@ export default PostsPage
 }
 
 export default PostsPage
-
-// Trigger deployment
