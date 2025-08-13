@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from src.models import db, User, SocialAccount, Post
 from datetime import datetime
 
@@ -22,15 +23,16 @@ def debug_test_logging():
     }), 200
 
 @social_accounts_api_bp.route('/accounts', methods=['GET'])
+@jwt_required()
 def get_user_social_accounts():
     """Get all social media accounts for the current user."""
     try:
-        # Verwende einen Standard-User für alle Requests (vereinfacht)
-        user = User.query.filter_by(username='admin').first()
+        # Get the real current user from JWT token
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
-        current_user_id = user.id
         
         # Get all social accounts for the user
         social_accounts = SocialAccount.query.filter_by(user_id=current_user_id).all()

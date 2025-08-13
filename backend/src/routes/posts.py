@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from src.models import db, User, Post, PostUsage
 from src.services.openai_service import OpenAIService
 import requests
@@ -7,18 +8,16 @@ from datetime import datetime
 posts_bp = Blueprint('posts', __name__)
 
 @posts_bp.route('/generate', methods=['POST'])
+@jwt_required()
 def generate_post():
     """Generate a social media post using AI."""
     try:
-        # Verwende einen Standard-User für alle Requests (vereinfacht)
-        user = User.query.filter_by(username='admin').first()
-        if not user:
-            # Fallback: Erstelle einen temporären User
-            user = User(username='temp_user', email='temp@example.com', role='user')
-            db.session.add(user)
-            db.session.commit()
+        # Get the real current user from JWT token
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
         
-        current_user_id = user.id
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
         # Check user's post usage limits
         post_usage = PostUsage.query.filter_by(user_id=current_user_id).first()
@@ -138,12 +137,16 @@ def generate_post():
 
 @posts_bp.route('/', methods=['GET'])
 @posts_bp.route('', methods=['GET'])
+@jwt_required()
 def get_posts():
     """Get user's posts."""
     try:
-        # Verwende admin user als Standard
-        user = User.query.filter_by(username='admin').first()
-        current_user_id = user.id if user else 1
+        # Get the real current user from JWT token
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 10, type=int)
@@ -164,12 +167,16 @@ def get_posts():
         return jsonify({'error': str(e)}), 500
 
 @posts_bp.route('/<int:post_id>', methods=['GET'])
+@jwt_required()
 def get_post(post_id):
     """Get a specific post."""
     try:
-        # Verwende admin user als Standard
-        user = User.query.filter_by(username='admin').first()
-        current_user_id = user.id if user else 1
+        # Get the real current user from JWT token
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
         post = Post.query.filter_by(id=post_id, user_id=current_user_id).first()
         
@@ -182,12 +189,16 @@ def get_post(post_id):
         return jsonify({'error': str(e)}), 500
 
 @posts_bp.route('/<int:post_id>', methods=['PUT'])
+@jwt_required()
 def update_post(post_id):
     """Update a post."""
     try:
-        # Verwende admin user als Standard
-        user = User.query.filter_by(username='admin').first()
-        current_user_id = user.id if user else 1
+        # Get the real current user from JWT token
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
         post = Post.query.filter_by(id=post_id, user_id=current_user_id).first()
         
@@ -219,12 +230,16 @@ def update_post(post_id):
         return jsonify({'error': str(e)}), 500
 
 @posts_bp.route('/<int:post_id>', methods=['DELETE'])
+@jwt_required()
 def delete_post(post_id):
     """Delete a post."""
     try:
-        # Verwende admin user als Standard
-        user = User.query.filter_by(username='admin').first()
-        current_user_id = user.id if user else 1
+        # Get the real current user from JWT token
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
         post = Post.query.filter_by(id=post_id, user_id=current_user_id).first()
         
@@ -241,12 +256,16 @@ def delete_post(post_id):
         return jsonify({'error': str(e)}), 500
 
 @posts_bp.route('/<int:post_id>/publish', methods=['POST'])
+@jwt_required()
 def publish_post(post_id):
     """Publish a post to social media."""
     try:
-        # Verwende admin user als Standard
-        user = User.query.filter_by(username='admin').first()
-        current_user_id = user.id if user else 1
+        # Get the real current user from JWT token
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
         
         post = Post.query.filter_by(id=post_id, user_id=current_user_id).first()
         

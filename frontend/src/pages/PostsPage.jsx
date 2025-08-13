@@ -68,7 +68,13 @@ const PostsPage = () => {
 
   const fetchConnectedAccounts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/social-accounts/accounts`)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/social-accounts/accounts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
       const data = await response.json()
 
       if (response.ok) {
@@ -90,7 +96,13 @@ const PostsPage = () => {
       if (selectedPlatform) params.append('platform', selectedPlatform)
       if (searchTerm) params.append('search', searchTerm)
 
-      const response = await fetch(`${API_BASE_URL}/api/library/posts?${params}`)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/library/posts?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
       const data = await response.json()
 
       if (response.ok) {
@@ -108,7 +120,13 @@ const PostsPage = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/library/posts/stats`)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/library/posts/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
       const data = await response.json()
 
       if (response.ok) {
@@ -125,8 +143,13 @@ const PostsPage = () => {
     }
 
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/library/posts/${postId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       })
 
       if (response.ok) {
@@ -143,8 +166,13 @@ const PostsPage = () => {
 
   const handleDuplicatePost = async (postId) => {
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/library/posts/${postId}/duplicate`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       })
 
       if (response.ok) {
