@@ -42,7 +42,32 @@ const AdminPageFinalWorking = () => {
       setLoading(true);
       addDebugLog('Lade Benutzer-Daten...');
       
-      // Mehrere API-Endpunkte versuchen
+      // Zuerst den offiziellen Admin-Endpunkt mit Authorization versuchen
+      const token = localStorage.getItem('token') || 'mock-token';
+      
+      try {
+        addDebugLog('Versuche offiziellen Admin-Endpunkt mit Authorization...');
+        const response = await fetch('https://social-media-post-generator-backend.onrender.com/api/admin/users', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data.users || []);
+          setError('');
+          addDebugLog(`✅ ${data.users?.length || 0} Benutzer vom Admin-Endpunkt geladen`, 'success');
+          return;
+        } else {
+          addDebugLog(`❌ Admin-Endpunkt Fehler ${response.status}`, 'error');
+        }
+      } catch (err) {
+        addDebugLog(`❌ Admin-Endpunkt Netzwerk-Fehler: ${err.message}`, 'error');
+      }
+      
+      // Fallback zu Debug-Endpunkten
       const endpoints = [
         'https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users',
         'https://social-media-post-generator-backend.onrender.com/api/debug-admin-safe/debug-users'
@@ -51,7 +76,7 @@ const AdminPageFinalWorking = () => {
       let userData = null;
       for (const endpoint of endpoints) {
         try {
-          addDebugLog(`Versuche Endpunkt: ${endpoint}`);
+          addDebugLog(`Versuche Fallback-Endpunkt: ${endpoint}`);
           const response = await fetch(endpoint);
           
           if (response.ok) {
@@ -205,6 +230,7 @@ const AdminPageFinalWorking = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
         },
         body: JSON.stringify(createUserForm)
       });
@@ -253,6 +279,7 @@ const AdminPageFinalWorking = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
         },
         body: JSON.stringify(editUserForm)
       });
@@ -287,6 +314,7 @@ const AdminPageFinalWorking = () => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-token'}`,
         }
       });
       
