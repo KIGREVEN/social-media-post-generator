@@ -73,15 +73,16 @@ def get_user_social_accounts():
         return jsonify({'error': str(e)}), 500
 
 @social_accounts_api_bp.route('/connect/<platform>', methods=['POST'])
+@jwt_required()
 def connect_social_account(platform):
     """Initiate OAuth flow for connecting a social media account."""
     try:
-        # Verwende einen Standard-User für alle Requests (vereinfacht)
-        user = User.query.filter_by(username='admin').first()
+        # Get the current user from JWT token
+        current_user_id = int(get_jwt_identity())
+        user = User.query.get(current_user_id)
+        
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
-        current_user_id = user.id
         
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Unsupported platform'}), 400
@@ -124,16 +125,16 @@ def connect_social_account(platform):
         # For other platforms, use demo data (as before)
         demo_data = {
             'facebook': {
-                'account_id': 'demo_facebook_456',
-                'account_name': 'Demo Facebook User'
+                'account_id': f'demo_facebook_{current_user_id}',
+                'account_name': f'Demo Facebook User {current_user_id}'
             },
             'twitter': {
-                'account_id': 'demo_twitter_789',
-                'account_name': 'Demo Twitter User'
+                'account_id': f'demo_twitter_{current_user_id}',
+                'account_name': f'Demo Twitter User {current_user_id}'
             },
             'instagram': {
-                'account_id': 'demo_instagram_101',
-                'account_name': 'Demo Instagram User'
+                'account_id': f'demo_instagram_{current_user_id}',
+                'account_name': f'Demo Instagram User {current_user_id}'
             }
         }
         
@@ -162,15 +163,16 @@ def connect_social_account(platform):
         return jsonify({'error': str(e)}), 500
 
 @social_accounts_api_bp.route('/disconnect/<platform>', methods=['DELETE'])
+@jwt_required()
 def disconnect_social_account(platform):
     """Disconnect a social media account."""
     try:
-        # Verwende einen Standard-User für alle Requests (vereinfacht)
-        user = User.query.filter_by(username='admin').first()
+        # Get the current user from JWT token
+        current_user_id = int(get_jwt_identity())
+        user = User.query.get(current_user_id)
+        
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
-        current_user_id = user.id
         
         if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
             return jsonify({'error': 'Unsupported platform'}), 400
@@ -199,6 +201,7 @@ def disconnect_social_account(platform):
         return jsonify({'error': str(e)}), 500
 
 @social_accounts_api_bp.route('/publish', methods=['POST'])
+@jwt_required()
 def publish_to_social_media():
     """Publish a post to connected social media platforms."""
     print("🚨🚨🚨 PUBLISH ROUTE ACCESSED 🚨🚨🚨")
@@ -210,14 +213,16 @@ def publish_to_social_media():
     print(f"Request headers: {dict(request.headers)}")
     
     try:
-        # Verwende einen Standard-User für alle Requests (vereinfacht)
-        user = User.query.filter_by(username='admin').first()
+        # Get the current user from JWT token
+        current_user_id = int(get_jwt_identity())
+        user = User.query.get(current_user_id)
+        
         if not user:
-            print(f"ERROR: User 'admin' not found")
+            print(f"ERROR: User with ID {current_user_id} not found")
             return jsonify({'error': 'User not found'}), 404
         
-        current_user_id = user.id
         print(f"User ID: {current_user_id}")
+        print(f"Username: {user.username}")
         
         data = request.get_json()
         print(f"Request data: {data}")
