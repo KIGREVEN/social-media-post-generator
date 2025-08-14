@@ -239,6 +239,15 @@ const PostGeneratorPage = () => {
 
     try {
       const token = localStorage.getItem('token')
+      
+      // Find the specific post for this platform
+      const platformPost = generatedPost.posts.find(post => post.platform === platform)
+      
+      if (!platformPost) {
+        toast.error(`Kein Post für ${platform} gefunden`)
+        return
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/social-accounts/publish`, {
         method: 'POST',
         headers: {
@@ -246,7 +255,7 @@ const PostGeneratorPage = () => {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          post_id: generatedPost.id,
+          post_id: platformPost.id,
           platforms: [platform]
         })
       })
@@ -256,6 +265,7 @@ const PostGeneratorPage = () => {
       if (response.ok) {
         toast.success(`Post erfolgreich auf ${platform} veröffentlicht!`)
       } else {
+        console.error('Publish error response:', data)
         toast.error(data.error || `Fehler beim Veröffentlichen auf ${platform}`)
       }
     } catch (error) {
