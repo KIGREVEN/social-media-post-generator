@@ -75,7 +75,6 @@ const AdminPageFinalWorking = () => {
       ];
 
       let userData = null;
-      const token = localStorage.getItem('token');
       
       for (const endpoint of endpoints) {
         try {
