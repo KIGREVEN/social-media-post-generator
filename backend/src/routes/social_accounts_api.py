@@ -426,15 +426,16 @@ def get_supported_platforms():
         return jsonify({'error': str(e)}), 500
 
 @social_accounts_api_bp.route('/stats', methods=['GET'])
+@jwt_required()
 def get_social_media_stats():
-    """Get social media statistics for the user."""
+    """Get social media statistics for the current user."""
     try:
-        # Verwende einen Standard-User für alle Requests (vereinfacht)
-        user = User.query.filter_by(username='admin').first()
+        # Get the current user from JWT token
+        current_user_id = int(get_jwt_identity())
+        user = User.query.get(current_user_id)
+        
         if not user:
             return jsonify({'error': 'User not found'}), 404
-        
-        current_user_id = user.id
         
         # Get connected accounts
         connected_accounts = SocialAccount.query.filter_by(

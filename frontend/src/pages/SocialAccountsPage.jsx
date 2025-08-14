@@ -104,7 +104,12 @@ const SocialAccountsPage = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/social-accounts/stats`)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/social-accounts/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await response.json()
 
       if (response.ok) {
