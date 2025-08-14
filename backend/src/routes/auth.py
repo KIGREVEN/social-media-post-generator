@@ -34,7 +34,8 @@ def login():
         )
         
         return jsonify({
-            'access_token': access_token,
+            'token': access_token,  # Changed from 'access_token' to 'token' for frontend compatibility
+            'access_token': access_token,  # Keep both for backward compatibility
             'user': user.to_dict()
         }), 200
         
