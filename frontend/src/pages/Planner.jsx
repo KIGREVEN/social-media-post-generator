@@ -132,7 +132,17 @@ const Planner = () => {
           // Create prompt for post generation
           const prompt = `Erstelle einen Social-Media-Post basierend auf: ${selectedIdea.title} – ${selectedIdea.hook}. Persona: ${selectedIdea.persona}. Funnel: ${selectedIdea.funnel}. Kanal(e): ${selectedIdea.channels.join(', ')}. Nutze klaren Hook→Nutzen→CTA.`;
           
-          // Generate post using direct API call
+          // Map channels to platform names
+          const platformMapping = {
+            'LI': 'linkedin',
+            'FB': 'facebook', 
+            'IG': 'instagram',
+            'X': 'twitter'
+          };
+          
+          const platforms = selectedIdea.channels.map(channel => platformMapping[channel]).filter(Boolean);
+          
+          // Generate post using multi-platform API
           const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://social-media-post-generator-backend.onrender.com';
           const token = localStorage.getItem('token')
           const response = await fetch(`${API_BASE_URL}/api/posts/generate`, {
@@ -145,7 +155,7 @@ const Planner = () => {
               profile_url: '',
               post_theme: prompt,
               additional_details: '',
-              platform: selectedIdea.channels.includes('LI') ? 'linkedin' : 'facebook',
+              platforms: platforms, // Use multi-platform array
               generate_image: true
             })
           });
@@ -164,7 +174,8 @@ const Planner = () => {
 
       if (createdPosts.length > 0) {
         // Navigate to posts page or show success message
-        alert(`${createdPosts.length} Beiträge erfolgreich erstellt! Sie finden sie in der Beiträge-Übersicht.`);
+        const totalPosts = createdPosts.reduce((sum, group) => sum + (group.posts ? group.posts.length : 1), 0);
+        alert(`${totalPosts} Beiträge erfolgreich erstellt! Sie finden sie in der Beiträge-Übersicht.`);
         
         // Reset selections
         setSelectedIdeas(new Set());

@@ -44,6 +44,8 @@ const PostsPageNew = () => {
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showGroupScheduleModal, setShowGroupScheduleModal] = useState(false)
   const [selectedGroup, setSelectedGroup] = useState(null)
+  const [editingPost, setEditingPost] = useState(null)
+  const [editContent, setEditContent] = useState('')
   const [scheduleForm, setScheduleForm] = useState({
     scheduled_date: '',
     scheduled_time: '',
@@ -405,6 +407,43 @@ const PostsPageNew = () => {
     }
   }
 
+  const handleEditPost = (post) => {
+    setEditingPost(post.id)
+    setEditContent(post.content)
+  }
+
+  const handleSaveEdit = async (post) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/posts/${post.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          content: editContent
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Post erfolgreich bearbeitet!')
+        setEditingPost(null)
+        setEditContent('')
+        fetchPostGroups()
+      } else {
+        toast.error('Fehler beim Bearbeiten des Posts')
+      }
+    } catch (error) {
+      toast.error('Verbindungsfehler beim Bearbeiten')
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingPost(null)
+    setEditContent('')
+  }
+
   const renderCalendar = () => {
     const year = currentMonth.getFullYear()
     const month = currentMonth.getMonth()
@@ -721,9 +760,20 @@ const PostsPageNew = () => {
                                     )}
                                   </div>
                                   
-                                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
-                                    {truncateText(post.content)}
-                                  </p>
+                                  {editingPost === post.id ? (
+                                    <div className="mb-2">
+                                      <textarea
+                                        value={editContent}
+                                        onChange={(e) => setEditContent(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                        rows={4}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">
+                                      {truncateText(post.content)}
+                                    </p>
+                                  )}
                                   
                                   <div className="text-xs text-gray-500 dark:text-gray-400">
                                     Erstellt: {formatDate(post.created_at)}
@@ -741,7 +791,7 @@ const PostsPageNew = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handlePublishPost(post)}
-                                disabled={post.is_posted || post.status === 'veröffentlicht'}
+                                disabled={post.is_posted || post.status === 'veröffentlicht' || editingPost === post.id}
                               >
                                 <ExternalLink className="h-3 w-3 mr-1" />
                                 Veröffentlichen
@@ -753,6 +803,7 @@ const PostsPageNew = () => {
                                   size="sm"
                                   onClick={() => handleCancelSchedule(post)}
                                   className="text-red-600 hover:text-red-700"
+                                  disabled={editingPost === post.id}
                                 >
                                   <X className="h-3 w-3 mr-1" />
                                   Stornieren
@@ -762,19 +813,44 @@ const PostsPageNew = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleSchedulePost(post)}
-                                  disabled={post.is_posted || post.status === 'veröffentlicht'}
+                                  disabled={post.is_posted || post.status === 'veröffentlicht' || editingPost === post.id}
                                 >
                                   <Clock className="h-3 w-3 mr-1" />
                                   Planen
                                 </Button>
                               )}
+                              
+                              {editingPost === post.id ? (
+                                <>
                                   <Button
                                     variant="outline"
                                     size="sm"
+                                    onClick={() => handleSaveEdit(post)}
+                                    className="text-green-600 hover:text-green-700"
                                   >
-                                    <Edit className="h-4 w-4 mr-1" />
-                                    Bearbeiten
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Speichern
                                   </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleCancelEdit}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <X className="h-3 w-3 mr-1" />
+                                    Abbrechen
+                                  </Button>
+                                </>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditPost(post)}
+                                >
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Bearbeiten
+                                </Button>
+                              )}
                                 </div>
                               </div>
                             </div>
