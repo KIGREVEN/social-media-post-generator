@@ -26,7 +26,8 @@ const AdminPageFinalWorking = () => {
     username: '',
     email: '',
     role: 'user',
-    subscription: 'free'
+    subscription: 'free',
+    password: ''
   });
 
   // Debug-Logging-Funktion
@@ -264,7 +265,8 @@ const AdminPageFinalWorking = () => {
       username: user.username,
       email: user.email,
       role: user.role,
-      subscription: user.subscription || 'free'
+      subscription: user.subscription || 'free',
+      password: '' // Leer lassen für optionale Passwort-Änderung
     });
     setShowEditUserModal(true);
     addDebugLog(`Bearbeite Benutzer: ${user.username}`);
@@ -274,12 +276,26 @@ const AdminPageFinalWorking = () => {
     try {
       addDebugLog(`Starte Benutzer-Update für: ${editingUser.username}`);
       
+      // Prepare update data - only include password if it's not empty
+      const updateData = {
+        username: editUserForm.username,
+        email: editUserForm.email,
+        role: editUserForm.role,
+        subscription: editUserForm.subscription
+      };
+      
+      // Only include password if it's provided
+      if (editUserForm.password && editUserForm.password.trim() !== '') {
+        updateData.password = editUserForm.password;
+        addDebugLog('Passwort wird mit aktualisiert');
+      }
+      
       const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editUserForm)
+        body: JSON.stringify(updateData)
       });
       
       if (response.ok) {
@@ -786,36 +802,36 @@ const AdminPageFinalWorking = () => {
         {/* Edit User Modal */}
         {showEditUserModal && editingUser && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Benutzer bearbeiten: {editingUser.username}</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Benutzer bearbeiten: {editingUser.username}</h3>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Benutzername</label>
                   <input
                     type="text"
                     value={editUserForm.username}
                     onChange={(e) => setEditUserForm({...editUserForm, username: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">E-Mail</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-Mail</label>
                   <input
                     type="email"
                     value={editUserForm.email}
                     onChange={(e) => setEditUserForm({...editUserForm, email: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rolle</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rolle</label>
                   <select
                     value={editUserForm.role}
                     onChange={(e) => setEditUserForm({...editUserForm, role: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="user">Benutzer</option>
                     <option value="admin">Administrator</option>
@@ -823,17 +839,33 @@ const AdminPageFinalWorking = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subscription</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subscription</label>
                   <select
                     value={editUserForm.subscription}
                     onChange={(e) => setEditUserForm({...editUserForm, subscription: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="free">Free</option>
                     <option value="basic">Basic</option>
                     <option value="premium">Premium</option>
                     <option value="enterprise">Enterprise</option>
                   </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Neues Passwort (optional)
+                  </label>
+                  <input
+                    type="password"
+                    value={editUserForm.password}
+                    onChange={(e) => setEditUserForm({...editUserForm, password: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Leer lassen, um Passwort nicht zu ändern"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Mindestens 6 Zeichen. Leer lassen, um das aktuelle Passwort zu behalten.
+                  </p>
                 </div>
               </div>
               

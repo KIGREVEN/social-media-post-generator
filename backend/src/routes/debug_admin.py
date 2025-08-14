@@ -273,13 +273,8 @@ def update_debug_user(user_id):
 def delete_debug_user(user_id):
     """Delete a user without JWT (debug only)."""
     if request.method == 'OPTIONS':
-        # Handle CORS preflight request
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-        response.headers.add('Access-Control-Max-Age', '86400')
-        return response
+        # Handle CORS preflight request - let Flask-CORS handle headers
+        return jsonify({'status': 'ok'}), 200
         
     try:
         user = User.query.get(user_id)
@@ -296,9 +291,7 @@ def delete_debug_user(user_id):
         db.session.delete(user)
         db.session.commit()
         
-        response = jsonify({'message': 'User deleted successfully'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        return response, 200
+        return jsonify({'message': 'User deleted successfully'}), 200
         
     except Exception as e:
         db.session.rollback()

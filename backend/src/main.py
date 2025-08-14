@@ -153,15 +153,6 @@ def create_app(config_name=None):
          vary_header=True,
          max_age=86400)
     
-    # Additional CORS handling for all routes
-    @app.after_request
-    def after_request(response):
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH')
-        response.headers.add('Access-Control-Max-Age', '86400')
-        return response
-    
     # Handle HTTPS redirects properly for CORS
     @app.before_request
     def force_https():
