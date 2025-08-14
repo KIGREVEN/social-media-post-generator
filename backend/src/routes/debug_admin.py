@@ -276,9 +276,11 @@ def delete_debug_user(user_id):
         # Handle CORS preflight request
         response = jsonify({'status': 'ok'})
         response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'DELETE,OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Max-Age', '86400')
         return response
+        
     try:
         user = User.query.get(user_id)
         if not user:
@@ -294,7 +296,9 @@ def delete_debug_user(user_id):
         db.session.delete(user)
         db.session.commit()
         
-        return jsonify({'message': 'User deleted successfully'}), 200
+        response = jsonify({'message': 'User deleted successfully'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 200
         
     except Exception as e:
         db.session.rollback()

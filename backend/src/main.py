@@ -146,11 +146,21 @@ def create_app(config_name=None):
     # Configure CORS with comprehensive settings
     CORS(app, 
          origins=app.config['CORS_ORIGINS'],
-         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-         allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'],
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+         allow_headers=['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
          supports_credentials=True,
          send_wildcard=False,
-         vary_header=True)
+         vary_header=True,
+         max_age=86400)
+    
+    # Additional CORS handling for all routes
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH')
+        response.headers.add('Access-Control-Max-Age', '86400')
+        return response
     
     # Handle HTTPS redirects properly for CORS
     @app.before_request
