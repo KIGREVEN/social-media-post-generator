@@ -24,8 +24,7 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Play,
-  Schedule
+  Play
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -608,7 +607,7 @@ const PostsPageNew = () => {
                                 disabled={post.is_posted || post.status === 'veröffentlicht'}
                                 className="p-1"
                               >
-                                <Schedule className="h-3 w-3" />
+                                <Clock className="h-3 w-3" />
                               </Button>
                             </div>
                           ))}
