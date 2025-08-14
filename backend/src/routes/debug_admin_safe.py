@@ -6,7 +6,8 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import text, func, inspect
 from sqlalchemy.exc import SQLAlchemyError
 from src.models import db, User, Post, SocialAccount, PostUsage
-import bcrypt
+import hashlib
+import secrets
 from datetime import datetime
 
 debug_admin_safe_bp = Blueprint('debug_admin_safe', __name__)

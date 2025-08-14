@@ -38,14 +38,24 @@ class User(db.Model):
     def check_password(self, password):
         """Check if the provided password matches the user's password."""
         try:
-            # Split salt and hash
-            salt, stored_hash = self.password_hash.split(':', 1)
-            # Hash the provided password with the same salt
-            password_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
-            # Compare hashes
-            return password_hash.hex() == stored_hash
-        except (ValueError, AttributeError):
-            # Handle legacy bcrypt hashes or invalid formats
+            # Check if it's a new hashlib format (contains ':')
+            if ':' in self.password_hash:
+                # New hashlib format
+                salt, stored_hash = self.password_hash.split(':', 1)
+                password_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+                return password_hash.hex() == stored_hash
+            else:
+                # Legacy bcrypt format - try to validate with bcrypt
+                try:
+                    import bcrypt
+                    password_bytes = password.encode('utf-8')
+                    hash_bytes = self.password_hash.encode('utf-8')
+                    return bcrypt.checkpw(password_bytes, hash_bytes)
+                except ImportError:
+                    # If bcrypt is not available, we can't validate legacy passwords
+                    # This is a fallback - in production, bcrypt should be available
+                    return False
+        except (ValueError, AttributeError, Exception):
             return False
 
     def is_admin(self):
