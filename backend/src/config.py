@@ -61,7 +61,8 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = Config.get_database_uri()
+    # Use external database if available, otherwise fallback to SQLite
+    SQLALCHEMY_DATABASE_URI = Config.get_database_uri() or 'sqlite:///production.db'
 
 class TestingConfig(Config):
     """Testing configuration."""
