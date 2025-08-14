@@ -295,7 +295,7 @@ Das Bild soll zeigen, wie echte Menschen das Produkt/den Service im Alltag nutze
                           additional_details: str, website_content: str, 
                           platform: str) -> str:
         """
-        Create the prompt for post generation based on specifications.
+        Create platform-specific prompts for post generation based on best practices.
         
         Args:
             profile_url: URL of the website/company
@@ -305,51 +305,134 @@ Das Bild soll zeigen, wie echte Menschen das Produkt/den Service im Alltag nutze
             platform: Target platform
             
         Returns:
-            Complete prompt for ChatGPT
+            Platform-optimized prompt for ChatGPT
         """
-        prompt = f"""
+        
+        # Base information for all platforms
+        base_info = f"""
 Analysiere die folgende Website: {profile_url} und erstelle basierend auf dem Post-Thema "{post_theme}" und den Zusatzinformationen "{additional_details}" einen professionellen Social Media Post.
 
 Website-Informationen:
 {website_content}
 
 🎯 Rolle:
-Du bist ein Top-performing LinkedIn Content Creator mit 15 Jahren Erfahrung in B2B-Content.
+Du bist ein erfahrener Social Media Content Creator mit Expertise für {platform.upper()}.
+"""
 
-📌 Ziel:
-Erstelle einen **deutschen Social Media Post**, der professionell klingt, aber nicht wie ein Blogartikel – kurz, klar und mit echtem Mehrwert für die Zielgruppe.
+        # Platform-specific prompts based on research
+        if platform == "linkedin":
+            return base_info + """
+📌 LinkedIn-Ziel:
+Erstelle einen **deutschen LinkedIn-Post** (1.300-2.000 Zeichen), der professionell und informativ ist.
 
-📋 Aufbau:
-- Beginne mit einem auffälligen Hook (1–2 Zeilen)
-- Erkläre kurz, warum das Thema relevant ist
-- Gib 2–3 konkrete Tipps, Impulse oder Learnings
-- Baue den Namen der Firma subtil als erfahrenen Partner ein (nicht werblich!)
-- Schließe mit einer Frage oder Call-to-Conversation ab
-- Füge max. 3 relevante Hashtags hinzu
+📋 LinkedIn-Aufbau:
+- Beginne mit einem professionellen Hook (1–2 Zeilen)
+- Erkläre das Thema mit Business-Relevanz
+- Gib 3-5 konkrete Tipps oder Insights
+- Baue den Firmennamen als Experten ein (nicht werblich!)
+- Schließe mit einer professionellen Frage ab
+- Füge 3-5 relevante Business-Hashtags hinzu
 
-🧠 Stil:
-- Aktiv, direkt und menschlich
-- Keine Buzzwords (z. B. „disruptiv", „nahtlos integrieren", „revolutionieren")
-- Keine Floskeln
-- Kurze, abwechslungsreiche Sätze
-- Authentisch, aber pointiert
+🧠 LinkedIn-Stil:
+- Professionell, aber menschlich
+- Längere, informative Texte erlaubt
+- Branchenwissen und Expertise zeigen
+- B2B-fokussiert
+- Thought Leadership
 
 🚨 WICHTIG:
-- Verwende KEINE strukturellen Bezeichnungen wie "Einleitung:", "Hauptteil:", "Abschluss:" im Text
-- Der Post soll direkt postfähig sein ohne weitere Bearbeitung
-- Schreibe fließenden Text ohne Meta-Strukturen
+- 1.300-2.000 Zeichen optimal für LinkedIn
+- Professioneller Ton, aber nicht steif
+- Mehrwert für Business-Netzwerk
 
 🎯 Output:
-Nur der fertige Social Media Post auf Deutsch, **kein Kommentar, keine Erklärung**, sofort postfähig. Maximal ca. 500 Wörter oder 1.300 Zeichen.
+Nur der fertige LinkedIn-Post auf Deutsch, sofort postfähig. 1.300-2.000 Zeichen.
 """
-        
-        # Platform-specific adjustments
-        if platform == "twitter":
-            prompt += "\n\nBesondere Anforderung: Der Post muss für Twitter optimiert sein (max. 280 Zeichen)."
+
         elif platform == "instagram":
-            prompt += "\n\nBesondere Anforderung: Der Post sollte visuell ansprechend und für Instagram optimiert sein."
+            return base_info + """
+📌 Instagram-Ziel:
+Erstelle einen **deutschen Instagram-Post** (unter 125 Zeichen), der visuell und emotional anspricht.
+
+📋 Instagram-Aufbau:
+- Kurzer, emotionaler Hook (1 Zeile)
+- Wichtigste Info zuerst
+- Sehr kurz und prägnant
+- Fokus auf Emotion und Storytelling
+- 5-10 relevante Hashtags
+
+🧠 Instagram-Stil:
+- Sehr kurz und knackig
+- Emotional und visuell
+- Storytelling im Fokus
+- Persönlich und authentisch
+- Unter 125 Zeichen für vollständige Sichtbarkeit
+
+🚨 WICHTIG:
+- MAXIMAL 125 Zeichen (nicht mehr!)
+- Wichtigste Info zuerst
+- Kurze Sätze, Zeilenumbrüche nutzen
+- Visuell denkend schreiben
+
+🎯 Output:
+Nur der fertige Instagram-Post auf Deutsch, sofort postfähig. MAXIMAL 125 Zeichen!
+"""
+
         elif platform == "facebook":
-            prompt += "\n\nBesondere Anforderung: Der Post sollte für Facebook optimiert sein und kann etwas länger sein."
-        
-        return prompt.strip()
+            return base_info + """
+📌 Facebook-Ziel:
+Erstelle einen **deutschen Facebook-Post** (40-80 Zeichen), der kurz und prägnant ist.
+
+📋 Facebook-Aufbau:
+- Sehr kurzer Hook (1 Zeile)
+- Kernbotschaft in 1-2 Sätzen
+- Community-orientiert
+- Persönlich und nahbar
+- 2-3 Hashtags
+
+🧠 Facebook-Stil:
+- Extrem kurz (40-80 Zeichen optimal)
+- Persönlich und community-orientiert
+- Einfache, klare Sprache
+- Zum Engagement einladend
+
+🚨 WICHTIG:
+- 40-80 Zeichen für beste Performance
+- Sehr kurz und prägnant
+- Community-Gefühl schaffen
+
+🎯 Output:
+Nur der fertige Facebook-Post auf Deutsch, sofort postfähig. 40-80 Zeichen optimal.
+"""
+
+        elif platform == "twitter":
+            return base_info + """
+📌 Twitter-Ziel:
+Erstelle einen **deutschen Twitter-Post** (70-100 Zeichen), der schnell erfassbar ist.
+
+📋 Twitter-Aufbau:
+- Sehr kurzer, prägnanter Hook
+- Kernbotschaft in einem Satz
+- News-orientiert und aktuell
+- Schnell erfassbar
+- 1-2 relevante Hashtags
+
+🧠 Twitter-Stil:
+- Extrem kurz (70-100 Zeichen optimal)
+- Schnell erfassbar
+- News-orientiert
+- Prägnant und auf den Punkt
+
+🚨 WICHTIG:
+- 70-100 Zeichen für beste Performance
+- Maximal 280 Zeichen absolutes Limit
+- Sehr kurz und schnell erfassbar
+
+🎯 Output:
+Nur der fertige Twitter-Post auf Deutsch, sofort postfähig. 70-100 Zeichen optimal.
+"""
+
+        else:
+            # Fallback to LinkedIn format
+            return self._create_post_prompt(profile_url, post_theme, additional_details, website_content, "linkedin")
 
