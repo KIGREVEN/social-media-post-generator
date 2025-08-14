@@ -97,9 +97,9 @@ def generate_post():
                     platform=platform
                 )
                 
-                # Generate image if requested (only for first platform to save resources)
+                # Generate image if requested (generate for each platform)
                 generated_image_url = None
-                if generate_image and platform == platforms[0]:
+                if generate_image:
                     try:
                         # Create image prompt based on the GENERATED POST CONTENT
                         image_prompt = openai_service.create_image_prompt(

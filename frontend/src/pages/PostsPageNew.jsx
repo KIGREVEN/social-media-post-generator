@@ -46,6 +46,8 @@ const PostsPageNew = () => {
   const [selectedGroup, setSelectedGroup] = useState(null)
   const [editingPost, setEditingPost] = useState(null)
   const [editContent, setEditContent] = useState('')
+  const [showImageModal, setShowImageModal] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
   const [scheduleForm, setScheduleForm] = useState({
     scheduled_date: '',
     scheduled_time: '',
@@ -444,6 +446,16 @@ const PostsPageNew = () => {
     setEditContent('')
   }
 
+  const handleShowImage = (imageUrl) => {
+    setSelectedImage(imageUrl)
+    setShowImageModal(true)
+  }
+
+  const handleCloseImageModal = () => {
+    setShowImageModal(false)
+    setSelectedImage(null)
+  }
+
   const renderCalendar = () => {
     const year = currentMonth.getFullYear()
     const month = currentMonth.getMonth()
@@ -820,6 +832,18 @@ const PostsPageNew = () => {
                                 </Button>
                               )}
                               
+                              {post.generated_image_url && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleShowImage(post.generated_image_url)}
+                                  className="text-purple-600 hover:text-purple-700"
+                                >
+                                  <Image className="h-3 w-3 mr-1" />
+                                  Bild anzeigen
+                                </Button>
+                              )}
+                              
                               {editingPost === post.id ? (
                                 <>
                                   <Button
@@ -967,6 +991,28 @@ const PostsPageNew = () => {
                 Alle planen
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Preview Modal */}
+      {showImageModal && selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50" onClick={handleCloseImageModal}>
+          <div className="relative max-w-4xl max-h-[90vh] p-4" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCloseImageModal}
+              className="absolute top-2 right-2 z-10 bg-white hover:bg-gray-100"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <img
+              src={selectedImage}
+              alt="Post Bild Vorschau"
+              className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+              style={{ maxHeight: 'calc(90vh - 2rem)' }}
+            />
           </div>
         </div>
       )}
