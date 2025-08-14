@@ -66,18 +66,17 @@ def register():
         if existing_user:
             return jsonify({'error': 'Username or email already exists'}), 409
         
-        # Create new user
-        user = User(username=username, email=email)
+        # Create new user with free plan
+        user = User(username=username, email=email, subscription='free')
         user.set_password(password)
-        
-        # Create post usage tracking for the user
-        post_usage = PostUsage(user_id=user.id)
         
         db.session.add(user)
         db.session.commit()
         
-        # Set user_id for post_usage after user is committed
-        post_usage.user_id = user.id
+        # Create post usage tracking for the user with free plan limits
+        post_usage = PostUsage(user_id=user.id)
+        post_usage.update_limits_for_plan('free')  # Set free plan limits (3 posts)
+        
         db.session.add(post_usage)
         db.session.commit()
         

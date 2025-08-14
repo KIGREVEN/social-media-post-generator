@@ -9,7 +9,7 @@ class PostUsage(db.Model):
     posts_generated = db.Column(db.Integer, default=0, nullable=False)
     posts_posted = db.Column(db.Integer, default=0, nullable=False)
     last_reset_date = db.Column(db.Date, default=date.today, nullable=False)
-    monthly_limit = db.Column(db.Integer, default=10, nullable=False)  # Default limit for free users
+    monthly_limit = db.Column(db.Integer, default=3, nullable=False)  # Default limit for free users (reduced to 3)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
@@ -67,4 +67,16 @@ class PostUsage(db.Model):
         """Set the monthly limit for the user."""
         self.monthly_limit = limit
         self.updated_at = datetime.utcnow()
+    
+    def update_limits_for_plan(self, plan):
+        """Update monthly limits based on user's subscription plan."""
+        plan_limits = {
+            'free': 3,
+            'basic': 50,
+            'premium': 200,
+            'enterprise': 1000
+        }
+        
+        new_limit = plan_limits.get(plan, 3)  # Default to free plan limit
+        self.set_monthly_limit(new_limit)
 

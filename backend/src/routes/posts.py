@@ -58,6 +58,14 @@ def generate_post():
                 'requested_platforms': len(platforms)
             }), 429
         
+        # Check if user can generate images (free plan restriction)
+        if generate_image and user.subscription == 'free':
+            return jsonify({
+                'error': 'Image generation is not available in the free plan. Please upgrade your subscription.',
+                'subscription': user.subscription,
+                'feature': 'image_generation'
+            }), 403
+        
         # Profile URL is optional for Content-Planner generated posts
         if not post_theme:
             return jsonify({'error': 'Post theme is required'}), 400
