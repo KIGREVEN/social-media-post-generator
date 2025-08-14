@@ -17,7 +17,10 @@ import {
   Image as ImageIcon,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Edit3,
+  Check,
+  X
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -35,6 +38,8 @@ const PostGeneratorPage = () => {
   const [generatedPost, setGeneratedPost] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [editingPost, setEditingPost] = useState(null) // ID of post being edited
+  const [editedContent, setEditedContent] = useState('') // Content being edited
 
   const platforms = [
     { id: 'linkedin', name: 'LinkedIn', description: 'Professionelle Inhalte', icon: '💼' },
@@ -173,6 +178,59 @@ const PostGeneratorPage = () => {
     if (postContent) {
       navigator.clipboard.writeText(postContent)
       toast.success('Post in Zwischenablage kopiert!')
+    }
+  }
+
+  const handleEditPost = (post) => {
+    setEditingPost(post.id)
+    setEditedContent(post.content)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingPost(null)
+    setEditedContent('')
+  }
+
+  const handleSaveEdit = async (postId) => {
+    if (!editedContent.trim()) {
+      toast.error('Post-Inhalt darf nicht leer sein')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: editedContent.trim()
+        })
+      })
+
+      if (response.ok) {
+        // Update the local state
+        setGeneratedPost(prev => ({
+          ...prev,
+          posts: prev.posts.map(post => 
+            post.id === postId 
+              ? { ...post, content: editedContent.trim() }
+              : post
+          )
+        }))
+        
+        setEditingPost(null)
+        setEditedContent('')
+        toast.success('Post erfolgreich bearbeitet!')
+      } else {
+        const data = await response.json()
+        toast.error(data.error || 'Fehler beim Speichern der Änderungen')
+      }
+    } catch (error) {
+      console.error('Save edit error:', error)
+      toast.error('Verbindungsfehler beim Speichern')
     }
   }
 
@@ -394,8 +452,40 @@ const PostGeneratorPage = () => {
                             {post.platform}
                           </Badge>
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {new Date(post.created_at).toLocaleDateString('de-DE')}
+                        <div className="flex items-center space-x-2">
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(post.created_at).toLocaleDateString('de-DE')}
+                          </div>
+                          {/* Edit Button */}
+                          {editingPost === post.id ? (
+                            <div className="flex items-center space-x-1">
+                              <Button
+                                onClick={() => handleSaveEdit(post.id)}
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                onClick={handleCancelEdit}
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={() => handleEditPost(post)}
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
 
@@ -414,11 +504,20 @@ const PostGeneratorPage = () => {
                       {/* Post Content */}
                       <div className="space-y-2 mb-4">
                         <Label>Post-Inhalt</Label>
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-600">
-                          <p className="whitespace-pre-wrap text-sm dark:text-gray-200">
-                            {post.content}
-                          </p>
-                        </div>
+                        {editingPost === post.id ? (
+                          <Textarea
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                            className="min-h-[120px] dark:bg-gray-800 dark:border-gray-600"
+                            placeholder="Post-Inhalt bearbeiten..."
+                          />
+                        ) : (
+                          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-600">
+                            <p className="whitespace-pre-wrap text-sm dark:text-gray-200">
+                              {post.content}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Actions for each post */}
@@ -428,6 +527,7 @@ const PostGeneratorPage = () => {
                           variant="outline" 
                           size="sm"
                           className="flex-1"
+                          disabled={editingPost === post.id}
                         >
                           <Copy className="w-4 h-4 mr-2" />
                           Kopieren
@@ -437,6 +537,7 @@ const PostGeneratorPage = () => {
                           variant="outline"
                           size="sm"
                           className="flex-1"
+                          disabled={editingPost === post.id}
                         >
                           <Share2 className="w-4 h-4 mr-2" />
                           Veröffentlichen
