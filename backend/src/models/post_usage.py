@@ -39,6 +39,10 @@ class PostUsage(db.Model):
         """Check if the user can generate another post."""
         return self.get_remaining_posts() > 0
     
+    def can_generate_posts(self, count):
+        """Check if the user can generate multiple posts."""
+        return self.get_remaining_posts() >= count
+    
     def increment_generated(self):
         """Increment the posts generated counter."""
         self.check_and_reset_monthly_usage()

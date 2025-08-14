@@ -28,7 +28,7 @@ const PostGeneratorPage = () => {
     profile_url: '',
     post_theme: '',
     additional_details: '',
-    platform: 'linkedin',
+    platforms: ['linkedin'], // Changed from single platform to array
     generate_image: false
   })
   
@@ -37,10 +37,10 @@ const PostGeneratorPage = () => {
   const [error, setError] = useState('')
 
   const platforms = [
-    { id: 'linkedin', name: 'LinkedIn', description: 'Professionelle Inhalte' },
-    { id: 'facebook', name: 'Facebook', description: 'Soziale Netzwerke' },
-    { id: 'twitter', name: 'Twitter/X', description: 'Kurze Updates' },
-    { id: 'instagram', name: 'Instagram', description: 'Visuelle Inhalte' }
+    { id: 'linkedin', name: 'LinkedIn', description: 'Professionelle Inhalte', icon: '💼' },
+    { id: 'facebook', name: 'Facebook', description: 'Soziale Netzwerke', icon: '📘' },
+    { id: 'twitter', name: 'Twitter/X', description: 'Kurze Updates', icon: '🐦' },
+    { id: 'instagram', name: 'Instagram', description: 'Visuelle Inhalte', icon: '📸' }
   ]
 
   const handleChange = (field, value) => {
@@ -51,9 +51,38 @@ const PostGeneratorPage = () => {
     setError('')
   }
 
+  const handlePlatformToggle = (platformId) => {
+    setFormData(prev => {
+      const currentPlatforms = prev.platforms || []
+      const isSelected = currentPlatforms.includes(platformId)
+      
+      let newPlatforms
+      if (isSelected) {
+        // Remove platform if already selected (but keep at least one)
+        newPlatforms = currentPlatforms.length > 1 
+          ? currentPlatforms.filter(p => p !== platformId)
+          : currentPlatforms
+      } else {
+        // Add platform if not selected
+        newPlatforms = [...currentPlatforms, platformId]
+      }
+      
+      return {
+        ...prev,
+        platforms: newPlatforms
+      }
+    })
+    setError('')
+  }
+
   const handleGenerate = async () => {
     if (!formData.profile_url || !formData.post_theme) {
       setError('Bitte füllen Sie alle Pflichtfelder aus')
+      return
+    }
+
+    if (!formData.platforms || formData.platforms.length === 0) {
+      setError('Bitte wählen Sie mindestens eine Plattform aus')
       return
     }
 
@@ -96,14 +125,32 @@ const PostGeneratorPage = () => {
       console.log('Response data:', data);
 
       if (response.ok) {
-        setGeneratedPost(data.post);
-        toast.success('Post erfolgreich generiert!');
+        // Handle both single post (backward compatibility) and multiple posts
+        if (data.posts && data.posts.length > 0) {
+          setGeneratedPost({
+            posts: data.posts,
+            platforms_generated: data.platforms_generated,
+            message: data.message
+          });
+          toast.success(`${data.posts.length} Posts erfolgreich generiert!`);
+        } else if (data.post) {
+          // Backward compatibility for single post
+          setGeneratedPost({
+            posts: [data.post],
+            platforms_generated: [data.post.platform],
+            message: data.message
+          });
+          toast.success('Post erfolgreich generiert!');
+        }
       } else {
         // Detaillierte Fehlerbehandlung
         let errorMessage = data.error || 'Fehler beim Generieren des Posts';
         
         if (response.status === 429) {
-          errorMessage = 'Monatliches Limit erreicht. Bitte upgraden Sie Ihr Abonnement.';
+          errorMessage = data.error || 'Monatliches Limit erreicht. Bitte upgraden Sie Ihr Abonnement.';
+          if (data.requested_platforms) {
+            errorMessage += ` (${data.requested_platforms} Posts benötigt, ${data.remaining_posts} verfügbar)`;
+          }
         } else if (response.status === 500) {
           errorMessage = 'Server-Fehler: ' + (data.details || 'Unbekannter Fehler');
         }
@@ -122,9 +169,9 @@ const PostGeneratorPage = () => {
     }
   }
 
-  const handleCopyToClipboard = () => {
-    if (generatedPost?.content) {
-      navigator.clipboard.writeText(generatedPost.content)
+  const handleCopyToClipboard = (postContent) => {
+    if (postContent) {
+      navigator.clipboard.writeText(postContent)
       toast.success('Post in Zwischenablage kopiert!')
     }
   }
@@ -229,22 +276,44 @@ const PostGeneratorPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="platform">Zielplattform</Label>
-              <Select value={formData.platform} onValueChange={(value) => handleChange('platform', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Plattform auswählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  {platforms.map((platform) => (
-                    <SelectItem key={platform.id} value={platform.id}>
-                      <div className="flex flex-col">
-                        <span>{platform.name}</span>
-                        <span className="text-sm text-gray-500">{platform.description}</span>
+              <Label>Zielplattformen</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {platforms.map((platform) => (
+                  <div
+                    key={platform.id}
+                    className={`
+                      p-3 border rounded-lg cursor-pointer transition-all
+                      ${formData.platforms?.includes(platform.id)
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-400'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                      }
+                    `}
+                    onClick={() => handlePlatformToggle(platform.id)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <div className="text-lg">{platform.icon}</div>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm dark:text-white">{platform.name}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{platform.description}</div>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                      <div className={`
+                        w-4 h-4 rounded border-2 flex items-center justify-center
+                        ${formData.platforms?.includes(platform.id)
+                          ? 'bg-blue-500 border-blue-500'
+                          : 'border-gray-300 dark:border-gray-600'
+                        }
+                      `}>
+                        {formData.platforms?.includes(platform.id) && (
+                          <CheckCircle className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Wählen Sie eine oder mehrere Plattformen aus. Für jede Plattform wird ein optimierter Post generiert.
+              </p>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -267,12 +336,15 @@ const PostGeneratorPage = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generiere Post...
+                  Generiere Posts...
                 </>
               ) : (
                 <>
                   <PlusCircle className="w-4 h-4 mr-2" />
-                  Post generieren
+                  {formData.platforms?.length > 1 
+                    ? `${formData.platforms.length} Posts generieren`
+                    : 'Post generieren'
+                  }
                 </>
               )}
             </Button>
@@ -291,90 +363,104 @@ const PostGeneratorPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {generatedPost ? (
+            {generatedPost && generatedPost.posts ? (
               <div className="space-y-6">
-                {/* Platform Badge */}
+                {/* Summary */}
                 <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="capitalize">
-                    {generatedPost.platform}
-                  </Badge>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary">
+                      {generatedPost.posts.length} Posts generiert
+                    </Badge>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      für {generatedPost.platforms_generated?.join(', ')}
+                    </span>
+                  </div>
                   <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(generatedPost.created_at).toLocaleDateString('de-DE')}
+                    {new Date().toLocaleDateString('de-DE')}
                   </div>
                 </div>
 
-                {/* Generated Image */}
-                {generatedPost.generated_image_url && (
-                  <div className="space-y-2">
-                    <Label>Generiertes Bild</Label>
-                    <img 
-                      src={generatedPost.generated_image_url} 
-                      alt="Generated content" 
-                      className="w-full rounded-lg border dark:border-gray-600"
-                    />
-                  </div>
-                )}
+                {/* Posts */}
+                <div className="space-y-6">
+                  {generatedPost.posts.map((post, index) => (
+                    <div key={post.id || index} className="border rounded-lg p-4 dark:border-gray-600">
+                      {/* Platform Badge */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-lg">
+                            {platforms.find(p => p.id === post.platform)?.icon || '📱'}
+                          </span>
+                          <Badge variant="secondary" className="capitalize">
+                            {post.platform}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {new Date(post.created_at).toLocaleDateString('de-DE')}
+                        </div>
+                      </div>
 
-                {/* Post Content */}
-                <div className="space-y-2">
-                  <Label>Post-Inhalt</Label>
-                  <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-600">
-                    <p className="whitespace-pre-wrap text-sm dark:text-gray-200">
-                      {generatedPost.content}
-                    </p>
-                  </div>
-                </div>
+                      {/* Generated Image */}
+                      {post.generated_image_url && (
+                        <div className="space-y-2 mb-4">
+                          <Label>Generiertes Bild</Label>
+                          <img 
+                            src={post.generated_image_url} 
+                            alt="Generated content" 
+                            className="w-full rounded-lg border dark:border-gray-600"
+                          />
+                        </div>
+                      )}
 
-                {/* Actions */}
-                <div className="space-y-4">
-                  <Button 
-                    onClick={handleCopyToClipboard} 
-                    variant="outline" 
-                    className="w-full"
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    In Zwischenablage kopieren
-                  </Button>
+                      {/* Post Content */}
+                      <div className="space-y-2 mb-4">
+                        <Label>Post-Inhalt</Label>
+                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-600">
+                          <p className="whitespace-pre-wrap text-sm dark:text-gray-200">
+                            {post.content}
+                          </p>
+                        </div>
+                      </div>
 
-                  <Tabs defaultValue="publish" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="publish">Veröffentlichen</TabsTrigger>
-                      <TabsTrigger value="save">Speichern</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="publish" className="space-y-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                        Veröffentlichen Sie direkt auf Ihren verbundenen Social Media Accounts
-                      </p>
-                      {platforms.map((platform) => (
+                      {/* Actions for each post */}
+                      <div className="flex space-x-2">
+                        <Button 
+                          onClick={() => handleCopyToClipboard(post.content)} 
+                          variant="outline" 
+                          size="sm"
+                          className="flex-1"
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Kopieren
+                        </Button>
                         <Button
-                          key={platform.id}
-                          onClick={() => handlePublish(platform.id)}
+                          onClick={() => handlePublish(post.platform)}
                           variant="outline"
-                          className="w-full justify-start"
+                          size="sm"
+                          className="flex-1"
                         >
                           <Share2 className="w-4 h-4 mr-2" />
-                          Auf {platform.name} veröffentlichen
+                          Veröffentlichen
                         </Button>
-                      ))}
-                    </TabsContent>
-                    
-                    <TabsContent value="save" className="space-y-2">
-                      <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
-                        <CheckCircle className="w-4 h-4" />
-                        <span className="text-sm">Post wurde automatisch gespeichert</span>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Sie finden diesen Post in Ihrer Post-Übersicht unter "Meine Posts"
-                      </p>
-                    </TabsContent>
-                  </Tabs>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Global Actions */}
+                <div className="border-t pt-4 dark:border-gray-600">
+                  <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 mb-2">
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="text-sm">Alle Posts wurden automatisch gespeichert</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Sie finden diese Posts in Ihrer Post-Übersicht unter "Meine Posts"
+                  </p>
                 </div>
               </div>
             ) : (
               <div className="text-center py-12 text-gray-500">
                 <Wand2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Generieren Sie einen Post, um die Vorschau zu sehen</p>
+                <p>Generieren Sie Posts, um die Vorschau zu sehen</p>
               </div>
             )}
           </CardContent>

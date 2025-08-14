@@ -10,7 +10,7 @@ posts_bp = Blueprint('posts', __name__)
 @posts_bp.route('/generate', methods=['POST'])
 @jwt_required()
 def generate_post():
-    """Generate a social media post using AI."""
+    """Generate social media posts for multiple platforms using AI."""
     try:
         # Get the real current user from JWT token (convert string to int)
         current_user_id = int(get_jwt_identity())
@@ -26,20 +26,37 @@ def generate_post():
             db.session.add(post_usage)
             db.session.commit()
         
-        if not post_usage.can_generate_post():
-            return jsonify({
-                'error': 'Monthly post limit reached',
-                'remaining_posts': post_usage.get_remaining_posts(),
-                'monthly_limit': post_usage.monthly_limit
-            }), 429
-        
         data = request.get_json()
         
         profile_url = data.get('profile_url', '')
         post_theme = data.get('post_theme')
         additional_details = data.get('additional_details', '')
         generate_image = data.get('generate_image', False)
-        platform = data.get('platform', 'linkedin')
+        
+        # Support both single platform (backward compatibility) and multiple platforms
+        platforms = data.get('platforms', [])
+        single_platform = data.get('platform')
+        
+        if single_platform and not platforms:
+            platforms = [single_platform]
+        elif not platforms:
+            platforms = ['linkedin']  # Default platform
+        
+        # Validate platforms
+        valid_platforms = ['linkedin', 'facebook', 'twitter', 'instagram']
+        platforms = [p for p in platforms if p in valid_platforms]
+        
+        if not platforms:
+            return jsonify({'error': 'At least one valid platform is required'}), 400
+        
+        # Check if user has enough posts remaining for all platforms
+        if not post_usage.can_generate_posts(len(platforms)):
+            return jsonify({
+                'error': f'Not enough posts remaining. Need {len(platforms)}, have {post_usage.get_remaining_posts()}',
+                'remaining_posts': post_usage.get_remaining_posts(),
+                'monthly_limit': post_usage.monthly_limit,
+                'requested_platforms': len(platforms)
+            }), 429
         
         # Profile URL is optional for Content-Planner generated posts
         if not post_theme:
@@ -48,9 +65,6 @@ def generate_post():
         # Use a default profile URL if none provided (for Content-Planner)
         if not profile_url:
             profile_url = 'https://example.com'
-        
-        if platform not in ['linkedin', 'facebook', 'twitter', 'instagram']:
-            return jsonify({'error': 'Invalid platform'}), 400
         
         # Initialize OpenAI service
         try:
@@ -66,67 +80,86 @@ def generate_post():
                 'details': str(e)
             }), 500
         
-        # Generate the post content
-        try:
-            post_content = openai_service.generate_social_media_post(
-                profile_url=profile_url,
-                post_theme=post_theme,
-                additional_details=additional_details,
-                platform=platform
-            )
-        except Exception as e:
-            return jsonify({
-                'error': 'Post generation failed',
-                'details': str(e)
-            }), 500
+        # Generate posts for each platform
+        generated_posts = []
         
-        # Generate image if requested
-        generated_image_url = None
-        if generate_image:
+        for platform in platforms:
             try:
-                # Create image prompt based on the GENERATED POST CONTENT (not just theme)
-                image_prompt = openai_service.create_image_prompt(
-                    post_content=post_content,  # Use the actual generated post content
+                # Generate platform-specific post content
+                post_content = openai_service.generate_social_media_post(
+                    profile_url=profile_url,
+                    post_theme=post_theme,
+                    additional_details=additional_details,
                     platform=platform
                 )
                 
-                # Get platform-specific image size
-                image_size = openai_service.get_platform_image_size(platform)
+                # Generate image if requested (only for first platform to save resources)
+                generated_image_url = None
+                if generate_image and platform == platforms[0]:
+                    try:
+                        # Create image prompt based on the GENERATED POST CONTENT
+                        image_prompt = openai_service.create_image_prompt(
+                            post_content=post_content,
+                            platform=platform
+                        )
+                        
+                        # Get platform-specific image size
+                        image_size = openai_service.get_platform_image_size(platform)
+                        
+                        # Generate image with platform-specific size
+                        generated_image_url = openai_service.generate_image(
+                            prompt=image_prompt,
+                            size=image_size
+                        )
+                        
+                    except Exception as e:
+                        # Don't fail the entire request if image generation fails
+                        print(f"Image generation failed for {platform}: {str(e)}")
                 
-                # Generate image with platform-specific size
-                generated_image_url = openai_service.generate_image(
-                    prompt=image_prompt,
-                    size=image_size
+                # Create and save the post
+                post = Post(
+                    user_id=current_user_id,
+                    title=f"{post_theme} ({platform.title()})"[:200],  # Include platform in title
+                    content=post_content,
+                    profile_url=profile_url,
+                    post_theme=post_theme,
+                    additional_details=additional_details,
+                    generated_image_url=generated_image_url,
+                    platform=platform
                 )
                 
+                db.session.add(post)
+                generated_posts.append(post)
+                
+                # Update usage counter for each post
+                post_usage.increment_generated()
+                
             except Exception as e:
-                # Don't fail the entire request if image generation fails
-                print(f"Image generation failed: {str(e)}")
+                print(f"Failed to generate post for {platform}: {str(e)}")
+                # Continue with other platforms even if one fails
+                continue
         
-        # Create and save the post
-        post = Post(
-            user_id=current_user_id,
-            title=post_theme[:200],  # Truncate to fit title field
-            content=post_content,
-            profile_url=profile_url,
-            post_theme=post_theme,
-            additional_details=additional_details,
-            generated_image_url=generated_image_url,
-            platform=platform
-        )
-        
-        db.session.add(post)
-        
-        # Update usage counter
-        post_usage.increment_generated()
+        if not generated_posts:
+            return jsonify({
+                'error': 'Failed to generate posts for any platform',
+                'details': 'All platform generations failed'
+            }), 500
         
         db.session.commit()
         
-        return jsonify({
-            'post': post.to_dict(),
+        # Return response with all generated posts
+        response_data = {
+            'posts': [post.to_dict() for post in generated_posts],
             'remaining_posts': post_usage.get_remaining_posts(),
-            'message': 'Post generated successfully'
-        }), 201
+            'message': f'Successfully generated {len(generated_posts)} posts for {len(generated_posts)} platforms',
+            'platforms_generated': [post.platform for post in generated_posts]
+        }
+        
+        # For backward compatibility, also include single 'post' field if only one platform
+        if len(generated_posts) == 1:
+            response_data['post'] = generated_posts[0].to_dict()
+        
+        return jsonify(response_data), 201
         
     except Exception as e:
         db.session.rollback()
