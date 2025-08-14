@@ -486,12 +486,12 @@ const PostsPageNew = () => {
                     <div className="space-y-1">
                       {dayData.scheduled.map((post, postIndex) => (
                         <div key={`scheduled-${postIndex}`} className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-1 rounded">
-                          {post.title} ({post.platform}) geplant
+                          {post.title} geplant
                         </div>
                       ))}
                       {dayData.published.map((post, postIndex) => (
                         <div key={`published-${postIndex}`} className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-1 rounded">
-                          {post.title} ({post.platform}) veröffentlicht
+                          {post.title} veröffentlicht
                         </div>
                       ))}
                     </div>
