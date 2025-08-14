@@ -83,7 +83,12 @@ const SocialAccountsPage = () => {
 
   const fetchAccounts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/social-accounts/accounts`)
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/social-accounts/accounts`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
       const data = await response.json()
 
       if (response.ok) {
@@ -127,10 +132,12 @@ const SocialAccountsPage = () => {
     try {
       setConnecting(prev => ({ ...prev, [platform]: true }))
       
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/social-accounts/connect/${platform}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
       })
       
@@ -167,8 +174,12 @@ const SocialAccountsPage = () => {
     }
 
     try {
+      const token = localStorage.getItem('token')
       const response = await fetch(`${API_BASE_URL}/api/social-accounts/disconnect/${platform}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
 
       const data = await response.json()
