@@ -70,15 +70,21 @@ const AdminPageFinalWorking = () => {
       
       // Fallback zu Debug-Endpunkten
       const endpoints = [
-        'https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users',
-        'https://social-media-post-generator-backend.onrender.com/api/debug-admin-safe/debug-users'
+        'https://social-media-post-generator-backend.onrender.com/api/admin/users',
+        'https://social-media-post-generator-backend.onrender.com/api/admin/users'
       ];
 
       let userData = null;
+      const token = localStorage.getItem('token');
+      
       for (const endpoint of endpoints) {
         try {
           addDebugLog(`Versuche Fallback-Endpunkt: ${endpoint}`);
-          const response = await fetch(endpoint);
+          const response = await fetch(endpoint, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
           
           if (response.ok) {
             const data = await response.json();
@@ -148,8 +154,8 @@ const AdminPageFinalWorking = () => {
         addDebugLog(`❌ Direkte API fehlgeschlagen, versuche Fallback...`, 'error');
         
         const fallbackEndpoints = [
-          `https://social-media-post-generator-backend.onrender.com/api/debug-admin/users/${userId}`,
-          `https://social-media-post-generator-backend.onrender.com/api/debug-admin-safe/debug-users/${userId}`
+          `https://social-media-post-generator-backend.onrender.com/api/admin/users/${userId}`,
+          `https://social-media-post-generator-backend.onrender.com/api/admin/users/${userId}`
         ];
         
         let success = false;
@@ -227,10 +233,12 @@ const AdminPageFinalWorking = () => {
         return;
       }
       
-      const response = await fetch('https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users', {
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://social-media-post-generator-backend.onrender.com/api/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(createUserForm)
       });
@@ -290,10 +298,12 @@ const AdminPageFinalWorking = () => {
         addDebugLog('Passwort wird mit aktualisiert');
       }
       
-      const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users/${editingUser.id}`, {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/admin/users/${editingUser.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(updateData)
       });
@@ -321,10 +331,12 @@ const AdminPageFinalWorking = () => {
       addDebugLog(`Starte Benutzer-Löschung für: ${user.username}`);
       
       if (confirm(`Sind Sie sicher, dass Sie ${user.username} löschen möchten?`)) {
-        const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/debug-admin/debug-users/${user.id}`, {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`https://social-media-post-generator-backend.onrender.com/api/admin/users/${user.id}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
           }
         });
         
