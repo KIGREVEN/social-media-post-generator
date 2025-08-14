@@ -41,6 +41,8 @@ const PostsPageNew = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedPost, setSelectedPost] = useState(null)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [showGroupScheduleModal, setShowGroupScheduleModal] = useState(false)
+  const [selectedGroup, setSelectedGroup] = useState(null)
   const [scheduleForm, setScheduleForm] = useState({
     scheduled_date: '',
     scheduled_time: '',
@@ -241,7 +243,7 @@ const PostsPageNew = () => {
         },
         body: JSON.stringify({
           post_id: post.id,
-          platform: post.platform
+          platforms: [post.platform]  // API erwartet platforms Array
         })
       })
 
@@ -268,6 +270,66 @@ const PostsPageNew = () => {
       timezone: 'Europe/Berlin'
     })
     setShowScheduleModal(true)
+  }
+
+  const handleScheduleGroup = (group) => {
+    setSelectedGroup(group)
+    setScheduleForm({
+      scheduled_date: '',
+      scheduled_time: '',
+      timezone: 'Europe/Berlin'
+    })
+    setShowGroupScheduleModal(true)
+  }
+
+  const handleGroupScheduleSubmit = async () => {
+    if (!scheduleForm.scheduled_date || !scheduleForm.scheduled_time) {
+      toast.error('Bitte füllen Sie alle erforderlichen Felder aus')
+      return
+    }
+
+    const scheduledDateTime = new Date(`${scheduleForm.scheduled_date}T${scheduleForm.scheduled_time}`)
+    const now = new Date()
+    
+    if (scheduledDateTime <= now) {
+      toast.error('Der geplante Zeitpunkt muss in der Zukunft liegen')
+      return
+    }
+
+    try {
+      const token = localStorage.getItem('token')
+      const updatePromises = selectedGroup.posts
+        .filter(post => !post.is_posted && post.status !== 'veröffentlicht')
+        .map(post => 
+          fetch(`${API_BASE_URL}/api/posts/${post.id}`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              status: 'geplant',
+              scheduled_at: scheduledDateTime.toISOString()
+            })
+          })
+        )
+
+      const results = await Promise.all(updatePromises)
+      const successCount = results.filter(response => response.ok).length
+
+      if (successCount === updatePromises.length) {
+        toast.success(`Alle ${successCount} Posts erfolgreich geplant!`)
+      } else {
+        toast.warning(`${successCount} von ${updatePromises.length} Posts geplant`)
+      }
+
+      setShowGroupScheduleModal(false)
+      fetchPostGroups()
+      fetchStats()
+      fetchCalendarData()
+    } catch (error) {
+      toast.error('Fehler beim Planen der Posts')
+    }
   }
 
   const handleScheduleSubmit = async () => {
@@ -586,6 +648,19 @@ const PostsPageNew = () => {
                         
                         {/* Quick Actions */}
                         <div className="flex items-center gap-2">
+                          {/* Group Actions */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleScheduleGroup(group)}
+                            disabled={group.posts.every(post => post.is_posted || post.status === 'veröffentlicht')}
+                            className="mr-2"
+                          >
+                            <Clock className="h-3 w-3 mr-1" />
+                            Alle planen
+                          </Button>
+                          
+                          {/* Individual Platform Actions */}
                           {group.posts.map(post => (
                             <div key={post.id} className="flex items-center gap-1">
                               <Badge className={platformColors[post.platform]}>
@@ -740,6 +815,63 @@ const PostsPageNew = () => {
               </Button>
               <Button onClick={handleScheduleSubmit}>
                 Planen
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Group Schedule Modal */}
+      {showGroupScheduleModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Alle Posts planen
+            </h3>
+            
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>{selectedGroup?.theme}</strong>
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                {selectedGroup?.posts.filter(post => !post.is_posted && post.status !== 'veröffentlicht').length} Posts werden geplant
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Datum
+                </label>
+                <Input
+                  type="date"
+                  value={scheduleForm.scheduled_date}
+                  onChange={(e) => setScheduleForm({...scheduleForm, scheduled_date: e.target.value})}
+                  min={getMinDate()}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Uhrzeit
+                </label>
+                <Input
+                  type="time"
+                  value={scheduleForm.scheduled_time}
+                  onChange={(e) => setScheduleForm({...scheduleForm, scheduled_time: e.target.value})}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setShowGroupScheduleModal(false)}
+              >
+                Abbrechen
+              </Button>
+              <Button onClick={handleGroupScheduleSubmit}>
+                Alle planen
               </Button>
             </div>
           </div>
