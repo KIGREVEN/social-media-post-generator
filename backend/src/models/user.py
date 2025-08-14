@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-import bcrypt
+import hashlib
+import secrets
 
 db = SQLAlchemy()
 
@@ -26,16 +27,26 @@ class User(db.Model):
         return f'<User {self.username}>'
 
     def set_password(self, password):
-        """Hash and set the user's password."""
-        password_bytes = password.encode('utf-8')
-        salt = bcrypt.gensalt()
-        self.password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+        """Hash and set the user's password using PBKDF2."""
+        # Generate a random salt
+        salt = secrets.token_hex(16)
+        # Hash the password with PBKDF2
+        password_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+        # Store salt + hash
+        self.password_hash = salt + ':' + password_hash.hex()
 
     def check_password(self, password):
         """Check if the provided password matches the user's password."""
-        password_bytes = password.encode('utf-8')
-        hash_bytes = self.password_hash.encode('utf-8')
-        return bcrypt.checkpw(password_bytes, hash_bytes)
+        try:
+            # Split salt and hash
+            salt, stored_hash = self.password_hash.split(':', 1)
+            # Hash the provided password with the same salt
+            password_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+            # Compare hashes
+            return password_hash.hex() == stored_hash
+        except (ValueError, AttributeError):
+            # Handle legacy bcrypt hashes or invalid formats
+            return False
 
     def is_admin(self):
         """Check if the user has admin role."""
