@@ -24,7 +24,8 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Play
+  Play,
+  X
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -262,6 +263,36 @@ const PostsPageNew = () => {
     }
   }
 
+  const handleCancelSchedule = async (post) => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${API_BASE_URL}/api/posts/${post.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'ungeplant',
+          scheduled_at: null
+        })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast.success('Planung erfolgreich storniert!')
+        fetchPostGroups()
+        fetchStats()
+        fetchCalendarData()
+      } else {
+        toast.error(data.error || 'Fehler beim Stornieren der Planung')
+      }
+    } catch (error) {
+      toast.error('Verbindungsfehler beim Stornieren')
+    }
+  }
+
   const handleSchedulePost = (post) => {
     setSelectedPost(post)
     setScheduleForm({
@@ -453,16 +484,16 @@ const PostsPageNew = () => {
                   </div>
                   {dayData && (
                     <div className="space-y-1">
-                      {dayData.scheduled.length > 0 && (
-                        <div className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-1 rounded">
-                          {dayData.scheduled.length} geplant
+                      {dayData.scheduled.map((post, postIndex) => (
+                        <div key={`scheduled-${postIndex}`} className="text-xs bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-1 rounded">
+                          {post.title} {post.platform} geplant
                         </div>
-                      )}
-                      {dayData.published.length > 0 && (
-                        <div className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-1 rounded">
-                          {dayData.published.length} veröffentlicht
+                      ))}
+                      {dayData.published.map((post, postIndex) => (
+                        <div key={`published-${postIndex}`} className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 px-1 rounded">
+                          {post.title} {post.platform} veröffentlicht
                         </div>
-                      )}
+                      ))}
                     </div>
                   )}
                 </div>
@@ -706,24 +737,37 @@ const PostsPageNew = () => {
                                 </div>
                                 
                                 <div className="flex items-center gap-2 ml-4">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePublishPost(post)}
-                                    disabled={post.is_posted || post.status === 'veröffentlicht'}
-                                  >
-                                    <ExternalLink className="h-4 w-4 mr-1" />
-                                    Veröffentlichen
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleSchedulePost(post)}
-                                    disabled={post.is_posted || post.status === 'veröffentlicht'}
-                                  >
-                                    <Calendar className="h-4 w-4 mr-1" />
-                                    Planen
-                                  </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePublishPost(post)}
+                                disabled={post.is_posted || post.status === 'veröffentlicht'}
+                              >
+                                <ExternalLink className="h-3 w-3 mr-1" />
+                                Veröffentlichen
+                              </Button>
+                              
+                              {post.status === 'geplant' ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCancelSchedule(post)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <X className="h-3 w-3 mr-1" />
+                                  Stornieren
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSchedulePost(post)}
+                                  disabled={post.is_posted || post.status === 'veröffentlicht'}
+                                >
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  Planen
+                                </Button>
+                              )}
                                   <Button
                                     variant="outline"
                                     size="sm"
