@@ -129,9 +129,12 @@ def generate_post():
                     post_theme=post_theme,
                     additional_details=additional_details,
                     generated_image_url=generated_image_url,
-                    platform=platform,
-                    post_group_id=post_group_id  # Add group ID for multi-platform posts
+                    platform=platform
                 )
+                
+                # Safely set post_group_id if the field exists
+                if hasattr(post, 'post_group_id'):
+                    post.post_group_id = post_group_id
                 
                 db.session.add(post)
                 generated_posts.append(post)
@@ -256,23 +259,26 @@ def update_post(post_id):
             if data['platform'] in ['linkedin', 'facebook', 'twitter', 'instagram']:
                 post.platform = data['platform']
         
-        # Update status and scheduling fields
+        # Update status and scheduling fields (safe for missing columns)
         if 'status' in data:
             if data['status'] in ['ungeplant', 'geplant', 'veröffentlicht']:
-                post.status = data['status']
+                if hasattr(post, 'status'):
+                    post.status = data['status']
         
         if 'scheduled_at' in data:
             if data['scheduled_at']:
                 from datetime import datetime
                 try:
-                    post.scheduled_at = datetime.fromisoformat(data['scheduled_at'].replace('Z', '+00:00'))
-                    if post.status != 'veröffentlicht':  # Don't override published status
-                        post.status = 'geplant'
+                    if hasattr(post, 'scheduled_at'):
+                        post.scheduled_at = datetime.fromisoformat(data['scheduled_at'].replace('Z', '+00:00'))
+                        if hasattr(post, 'status') and getattr(post, 'status', None) != 'veröffentlicht':
+                            post.status = 'geplant'
                 except ValueError:
                     return jsonify({'error': 'Invalid scheduled_at format'}), 400
             else:
-                post.scheduled_at = None
-                if post.status == 'geplant':
+                if hasattr(post, 'scheduled_at'):
+                    post.scheduled_at = None
+                if hasattr(post, 'status') and getattr(post, 'status', None) == 'geplant':
                     post.status = 'ungeplant'
         
         db.session.commit()

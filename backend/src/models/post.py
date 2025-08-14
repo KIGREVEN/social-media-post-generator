@@ -30,7 +30,7 @@ class Post(db.Model):
         return f'<Post {self.id}: {self.title or "Untitled"}>'
     
     def to_dict(self):
-        """Convert post to dictionary."""
+        """Convert post to dictionary with safe fallbacks for new fields."""
         return {
             'id': self.id,
             'user_id': self.user_id,
@@ -41,30 +41,35 @@ class Post(db.Model):
             'additional_details': self.additional_details,
             'generated_image_url': self.generated_image_url,
             'platform': self.platform,
-            'status': self.status,
-            'scheduled_at': self.scheduled_at.isoformat() if self.scheduled_at else None,
+            'status': getattr(self, 'status', 'ungeplant'),  # Safe fallback
+            'scheduled_at': getattr(self, 'scheduled_at', None).isoformat() if getattr(self, 'scheduled_at', None) else None,
             'is_posted': self.is_posted,
             'posted_at': self.posted_at.isoformat() if self.posted_at else None,
-            'post_group_id': self.post_group_id,
+            'post_group_id': getattr(self, 'post_group_id', None),  # Safe fallback
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'updated_at': getattr(self, 'updated_at', None).isoformat() if getattr(self, 'updated_at', None) else None
         }
     
     def mark_as_posted(self, platform=None):
-        """Mark the post as posted."""
+        """Mark the post as posted with safe field access."""
         self.is_posted = True
         self.posted_at = datetime.utcnow()
-        self.status = 'veröffentlicht'
+        if hasattr(self, 'status'):
+            self.status = 'veröffentlicht'
         if platform:
             self.platform = platform
     
     def schedule_post(self, scheduled_datetime):
-        """Schedule the post for future publication."""
-        self.scheduled_at = scheduled_datetime
-        self.status = 'geplant'
+        """Schedule the post for future publication with safe field access."""
+        if hasattr(self, 'scheduled_at'):
+            self.scheduled_at = scheduled_datetime
+        if hasattr(self, 'status'):
+            self.status = 'geplant'
     
     def unschedule_post(self):
-        """Remove scheduling from the post."""
-        self.scheduled_at = None
-        self.status = 'ungeplant'
+        """Remove scheduling from the post with safe field access."""
+        if hasattr(self, 'scheduled_at'):
+            self.scheduled_at = None
+        if hasattr(self, 'status'):
+            self.status = 'ungeplant'
 

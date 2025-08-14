@@ -76,6 +76,8 @@ def run_database_migration():
         # Check and update posts table column types
         if 'posts' in inspector.get_table_names():
             print("🔄 Checking posts table column types...")
+            posts_columns = [col['name'] for col in inspector.get_columns('posts')]
+            
             try:
                 with db.engine.connect() as conn:
                     # Convert title from VARCHAR(200) to TEXT
@@ -90,12 +92,45 @@ def run_database_migration():
                         ALTER COLUMN post_theme TYPE TEXT
                     """))
                     
+                    # Add new columns for status and scheduling
+                    if 'status' not in posts_columns:
+                        print("🔄 Adding status column to posts table...")
+                        conn.execute(text("""
+                            ALTER TABLE posts 
+                            ADD COLUMN status VARCHAR(20) DEFAULT 'ungeplant' NOT NULL
+                        """))
+                        print("✅ Added status column")
+                    
+                    if 'scheduled_at' not in posts_columns:
+                        print("🔄 Adding scheduled_at column to posts table...")
+                        conn.execute(text("""
+                            ALTER TABLE posts 
+                            ADD COLUMN scheduled_at TIMESTAMP
+                        """))
+                        print("✅ Added scheduled_at column")
+                    
+                    if 'post_group_id' not in posts_columns:
+                        print("🔄 Adding post_group_id column to posts table...")
+                        conn.execute(text("""
+                            ALTER TABLE posts 
+                            ADD COLUMN post_group_id VARCHAR(50)
+                        """))
+                        print("✅ Added post_group_id column")
+                    
+                    if 'updated_at' not in posts_columns:
+                        print("🔄 Adding updated_at column to posts table...")
+                        conn.execute(text("""
+                            ALTER TABLE posts 
+                            ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        """))
+                        print("✅ Added updated_at column")
+                    
                     conn.commit()
-                    print("✅ Updated posts table column types to TEXT")
+                    print("✅ Updated posts table column types and added new fields")
                     
             except Exception as e:
                 print(f"⚠️  Could not update posts table columns: {e}")
-                print("   This is normal if columns are already TEXT type")
+                print("   This is normal if columns are already correct type or exist")
         else:
             print("⚠️  Posts table will be created on first post creation")
         
