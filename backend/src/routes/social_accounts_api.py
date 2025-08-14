@@ -316,6 +316,15 @@ def publish_to_social_media():
                     # Update status to 'veröffentlicht' if the field exists
                     if hasattr(post, 'status'):
                         post.status = 'veröffentlicht'
+                        print(f"Updated post status to 'veröffentlicht' for post ID {post.id}")
+                    
+                    # Commit immediately to ensure status is saved
+                    try:
+                        db.session.commit()
+                        print(f"Database committed successfully for post ID {post.id}")
+                    except Exception as commit_error:
+                        print(f"Database commit error: {commit_error}")
+                        db.session.rollback()
                     
                     results.append({
                         'platform': platform,
