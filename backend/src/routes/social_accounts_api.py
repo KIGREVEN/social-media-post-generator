@@ -313,6 +313,10 @@ def publish_to_social_media():
                     post.posted_at = datetime.utcnow()
                     post.platform = platform  # Update to last published platform
                     
+                    # Update status to 'veröffentlicht' if the field exists
+                    if hasattr(post, 'status'):
+                        post.status = 'veröffentlicht'
+                    
                     results.append({
                         'platform': platform,
                         'success': True,

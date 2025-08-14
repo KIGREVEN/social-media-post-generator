@@ -648,7 +648,7 @@ const PostsPageNew = () => {
                         
                         {/* Quick Actions */}
                         <div className="flex items-center gap-2">
-                          {/* Group Actions */}
+                          {/* Group Actions Only */}
                           <Button
                             variant="outline"
                             size="sm"
@@ -659,33 +659,6 @@ const PostsPageNew = () => {
                             <Clock className="h-3 w-3 mr-1" />
                             Alle planen
                           </Button>
-                          
-                          {/* Individual Platform Actions */}
-                          {group.posts.map(post => (
-                            <div key={post.id} className="flex items-center gap-1">
-                              <Badge className={platformColors[post.platform]}>
-                                {post.platform}
-                              </Badge>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handlePublishPost(post)}
-                                disabled={post.is_posted || post.status === 'veröffentlicht'}
-                                className="p-1"
-                              >
-                                <Play className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleSchedulePost(post)}
-                                disabled={post.is_posted || post.status === 'veröffentlicht'}
-                                className="p-1"
-                              >
-                                <Clock className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ))}
                         </div>
                       </div>
                     </div>
