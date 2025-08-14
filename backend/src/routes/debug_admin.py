@@ -269,13 +269,9 @@ def update_debug_user(user_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['DELETE', 'OPTIONS'])
+@debug_admin_bp.route('/debug-users/<int:user_id>', methods=['DELETE'])
 def delete_debug_user(user_id):
     """Delete a user without JWT (debug only)."""
-    if request.method == 'OPTIONS':
-        # Handle CORS preflight request - let Flask-CORS handle headers
-        return jsonify({'status': 'ok'}), 200
-        
     try:
         user = User.query.get(user_id)
         if not user:
