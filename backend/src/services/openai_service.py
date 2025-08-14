@@ -246,6 +246,97 @@ Das Bild soll zeigen, wie echte Menschen das Produkt/den Service im Alltag nutze
         
         return platform_sizes.get(platform, "1024x1024")
     
+    def generate_theme_title(self, post_theme: str, post_content: str = "") -> str:
+        """
+        Generate a short, catchy theme title from the post theme and content.
+        
+        Args:
+            post_theme: Original post theme/prompt
+            post_content: Generated post content (optional)
+            
+        Returns:
+            Short, catchy theme title
+        """
+        try:
+            import requests
+            
+            # Create prompt for theme title generation
+            prompt = f"""
+Erstelle einen kurzen, prägnanten Titel (maximal 8 Wörter) für diesen Social Media Post:
+
+Thema: {post_theme}
+{f"Inhalt: {post_content[:200]}..." if post_content else ""}
+
+Der Titel soll:
+- Kurz und einprägsam sein
+- Das Hauptthema erfassen
+- Professionell klingen
+- Neugierig machen
+
+Beispiele guter Titel:
+- "Die Kraft der Online Radio Ads"
+- "Erfolgreich durch Bannerwerbung"
+- "Die Macht der Stimme: Audio-Werbung"
+- "Digitale Transformation im Mittelstand"
+- "KI revolutioniert das Marketing"
+
+Antworte nur mit dem Titel, ohne weitere Erklärungen.
+            """
+            
+            payload = {
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    {"role": "system", "content": "Du bist ein Experte für prägnante, professionelle Titel."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 50,
+                "temperature": 0.7
+            }
+            
+            response = requests.post(self.chat_url, headers=self.headers, json=payload, timeout=30)
+            response.raise_for_status()
+            
+            result = response.json()
+            title = result['choices'][0]['message']['content'].strip()
+            
+            # Clean up the title (remove quotes, extra spaces)
+            title = title.strip('"').strip("'").strip()
+            
+            # Fallback if title is too long or empty
+            if len(title) > 60 or not title:
+                # Create a simple fallback title
+                words = post_theme.split()[:6]  # Take first 6 words
+                title = " ".join(words)
+                if title.endswith("–"):
+                    title = title[:-1].strip()
+            
+            return title
+            
+        except Exception as e:
+            print(f"Theme title generation failed: {str(e)}")
+            # Fallback: use first part of post_theme
+            words = post_theme.split()[:6]
+            return " ".join(words).strip()
+
+    def get_platform_image_size(self, platform: str) -> str:
+        """
+        Get the optimal image size for each platform.
+        
+        Args:
+            platform: Target platform
+            
+        Returns:
+            Image size string for the platform
+        """
+        platform_sizes = {
+            "linkedin": "1024x1024",    # Square format works well for LinkedIn
+            "facebook": "1024x1024",    # Square format for Facebook posts
+            "instagram": "1024x1536",   # Portrait format (9:16 ratio)
+            "twitter": "1024x1024"      # Square format for Twitter
+        }
+        
+        return platform_sizes.get(platform, "1024x1024")
+    
     def _analyze_website(self, url: str) -> str:
         """
         Analyze website content to extract relevant information.

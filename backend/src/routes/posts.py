@@ -120,13 +120,25 @@ def generate_post():
                         # Don't fail the entire request if image generation fails
                         print(f"Image generation failed for {platform}: {str(e)}")
                 
+                # Generate a short, catchy theme title
+                try:
+                    theme_title = openai_service.generate_theme_title(
+                        post_theme=post_theme,
+                        post_content=post_content
+                    )
+                except Exception as e:
+                    print(f"Theme title generation failed: {str(e)}")
+                    # Fallback: use first part of post_theme
+                    words = post_theme.split()[:6]
+                    theme_title = " ".join(words).strip()
+                
                 # Create and save the post
                 post = Post(
                     user_id=current_user_id,
-                    title=f"{post_theme} ({platform.title()})"[:200],  # Include platform in title
+                    title=f"{theme_title} ({platform.title()})"[:200],  # Use theme title instead of full prompt
                     content=post_content,
                     profile_url=profile_url,
-                    post_theme=post_theme,
+                    post_theme=theme_title,  # Store the short theme title instead of long prompt
                     additional_details=additional_details,
                     generated_image_url=generated_image_url,
                     platform=platform
