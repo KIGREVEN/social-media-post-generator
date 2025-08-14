@@ -83,6 +83,10 @@ def generate_post():
         # Generate posts for each platform
         generated_posts = []
         
+        # Create a unique group ID for multi-platform posts
+        import uuid
+        post_group_id = str(uuid.uuid4())
+        
         for platform in platforms:
             try:
                 # Generate platform-specific post content
@@ -125,7 +129,8 @@ def generate_post():
                     post_theme=post_theme,
                     additional_details=additional_details,
                     generated_image_url=generated_image_url,
-                    platform=platform
+                    platform=platform,
+                    post_group_id=post_group_id  # Add group ID for multi-platform posts
                 )
                 
                 db.session.add(post)
@@ -250,6 +255,25 @@ def update_post(post_id):
         if 'platform' in data:
             if data['platform'] in ['linkedin', 'facebook', 'twitter', 'instagram']:
                 post.platform = data['platform']
+        
+        # Update status and scheduling fields
+        if 'status' in data:
+            if data['status'] in ['ungeplant', 'geplant', 'veröffentlicht']:
+                post.status = data['status']
+        
+        if 'scheduled_at' in data:
+            if data['scheduled_at']:
+                from datetime import datetime
+                try:
+                    post.scheduled_at = datetime.fromisoformat(data['scheduled_at'].replace('Z', '+00:00'))
+                    if post.status != 'veröffentlicht':  # Don't override published status
+                        post.status = 'geplant'
+                except ValueError:
+                    return jsonify({'error': 'Invalid scheduled_at format'}), 400
+            else:
+                post.scheduled_at = None
+                if post.status == 'geplant':
+                    post.status = 'ungeplant'
         
         db.session.commit()
         

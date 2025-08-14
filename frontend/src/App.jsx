@@ -10,7 +10,7 @@ import DashboardPage from './pages/DashboardPage'
 import PostGeneratorPage from './pages/PostGeneratorPage'
 import SimplePostGeneratorPage from './pages/SimplePostGeneratorPage'
 import SimplePostGeneratorPageAsync from './pages/SimplePostGeneratorPageAsync'
-import PostsPage from './pages/PostsPage'
+import PostsPageNew from './pages/PostsPageNew'
 import SocialAccountsPage from './pages/SocialAccountsPage'
 import Planner from './pages/Planner'
 import Scheduler from './pages/Scheduler'
@@ -52,7 +52,7 @@ function App() {
                 path="/posts" 
                 element={
                   <ProtectedRoute>
-                    <PostsPage />
+                    <PostsPageNew />
                   </ProtectedRoute>
                 } 
               />
