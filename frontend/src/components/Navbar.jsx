@@ -66,11 +66,7 @@ const Navbar = () => {
                       Content-Planner
                     </Button>
                   </Link>
-                  <Link to="/scheduler">
-                    <Button variant="ghost" size="sm" className="nav-link hover:text-primary-500">
-                      📅 Post-Planer
-                    </Button>
-                  </Link>
+
                   <Link to="/generate">
                     <Button variant="ghost" size="sm" className="nav-link hover:text-primary-500">
                       <PlusCircle className="w-4 h-4 mr-2" />
@@ -134,11 +130,7 @@ const Navbar = () => {
                           Content-Planner
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/scheduler" className="w-full">
-                          📅 Post-Planer
-                        </Link>
-                      </DropdownMenuItem>
+
                       <DropdownMenuItem asChild>
                         <Link to="/generate" className="w-full">
                           <PlusCircle className="w-4 h-4 mr-2" />
