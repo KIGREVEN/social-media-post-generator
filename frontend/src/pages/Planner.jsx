@@ -254,18 +254,28 @@ const Planner = () => {
               </div>
             )}
 
-            {/* Persona Input */}
+            {/* Zielgruppe Selection */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Persona (optional)
+                Zielgruppe (optional)
               </label>
-              <input
-                type="text"
+              <select
                 value={persona}
                 onChange={(e) => setPersona(e.target.value)}
-                placeholder="Inhaber:in KMU Köln"
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-              />
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Zielgruppe auswählen...</option>
+                <option value="Privatkunden (B2C)">Privatkunden (B2C)</option>
+                <option value="Einzelunternehmer & Selbstständige">Einzelunternehmer & Selbstständige</option>
+                <option value="Kleine & mittlere Unternehmen (KMU)">Kleine & mittlere Unternehmen (KMU)</option>
+                <option value="Großunternehmen & Konzerne">Großunternehmen & Konzerne</option>
+                <option value="HR-Abteilungen">HR-Abteilungen</option>
+                <option value="IT-Abteilungen">IT-Abteilungen</option>
+                <option value="Einkaufs-/Beschaffungsabteilungen">Einkaufs-/Beschaffungsabteilungen</option>
+                <option value="Marketing- & Vertriebsabteilungen">Marketing- & Vertriebsabteilungen</option>
+                <option value="Öffentliche Einrichtungen & Behörden">Öffentliche Einrichtungen & Behörden</option>
+                <option value="Non-Profit-Organisationen">Non-Profit-Organisationen</option>
+              </select>
             </div>
 
             {/* Channels Selection */}
