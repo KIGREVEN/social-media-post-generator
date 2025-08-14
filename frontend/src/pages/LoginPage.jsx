@@ -149,22 +149,6 @@ const LoginPage = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Demo Credentials */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <h3 className="font-medium text-blue-900">Demo-Zugang</h3>
-              <p className="text-sm text-blue-700">
-                Testen Sie die Anwendung mit diesen Demo-Anmeldedaten:
-              </p>
-              <div className="text-sm font-mono bg-white p-2 rounded border">
-                <div>Benutzername: demo</div>
-                <div>Passwort: demo123</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )
